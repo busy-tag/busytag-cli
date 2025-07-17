@@ -71,12 +71,483 @@ class Program
         }
     }
 
+    static async Task ScanDeviceStorage()
+    {
+        if (_currentDevice?.IsConnected != true)
+        {
+            Console.WriteLine("No device connected.");
+            return;
+        }
+
+        try
+        {
+            Console.WriteLine("[INFO] Scanning device storage...");
+            var scanStartTime = DateTime.Now;
+            
+            // Get storage information
+            await _currentDevice.GetFreeStorageSizeAsync();
+            await _currentDevice.GetTotalStorageSizeAsync();
+            var files = await _currentDevice.GetFileListAsync();
+            
+            var scanTime = DateTime.Now - scanStartTime;
+            
+            Console.WriteLine("\n[STORAGE] Device Storage Information:");
+            Console.WriteLine($"   Total space: {GetHumanReadableSize(_currentDevice.TotalStorageSize)}");
+            Console.WriteLine($"   Free space: {GetHumanReadableSize(_currentDevice.FreeStorageSize)}");
+            Console.WriteLine($"   Used space: {GetHumanReadableSize(_currentDevice.TotalStorageSize - _currentDevice.FreeStorageSize)}");
+            
+            var usagePercentage = _currentDevice.TotalStorageSize > 0 ? 
+                (double)(_currentDevice.TotalStorageSize - _currentDevice.FreeStorageSize) / _currentDevice.TotalStorageSize * 100 : 0;
+            Console.WriteLine($"   Usage: {usagePercentage:F1}%");
+            Console.WriteLine($"   Files count: {files.Count}");
+            Console.WriteLine($"   Scan time: {FormatTimeSpanWithMs(scanTime)}");
+            
+            if (files.Count > 0)
+            {
+                Console.WriteLine("\n[FILES] Files on device (sorted by size):");
+                var totalFileSize = 0L;
+                var imageFiles = 0;
+                var otherFiles = 0;
+                
+                foreach (var file in files.OrderByDescending(f => f.Size))
+                {
+                    var indicator = file.Name == _currentDevice.CurrentImageName ? " (current)" : "";
+                    var fileType = IsImageFile(file.Name) ? "[IMG]" : "[FILE]";
+                    Console.WriteLine($"     {fileType} {file.Name} - {GetHumanReadableSize(file.Size)}{indicator}");
+                    totalFileSize += file.Size;
+                    
+                    if (IsImageFile(file.Name)) imageFiles++;
+                    else otherFiles++;
+                }
+                
+                Console.WriteLine($"\n[STATS] File Statistics:");
+                Console.WriteLine($"   Total files size: {GetHumanReadableSize(totalFileSize)}");
+                Console.WriteLine($"   Image files: {imageFiles}");
+                Console.WriteLine($"   Other files: {otherFiles}");
+                Console.WriteLine($"   Current image: {_currentDevice.CurrentImageName ?? "None"}");
+                
+                if (totalFileSize != (_currentDevice.TotalStorageSize - _currentDevice.FreeStorageSize))
+                {
+                    var systemSpace = (_currentDevice.TotalStorageSize - _currentDevice.FreeStorageSize) - totalFileSize;
+                    Console.WriteLine($"   System/overhead: {GetHumanReadableSize(systemSpace)}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("\n[INFO] No files found on device.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error scanning device storage: {ex.Message}");
+        }
+    }
+
+    static bool IsImageFile(string fileName)
+    {
+        var imageExtensions = new[] { ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp" };
+        return imageExtensions.Any(ext => fileName.EndsWith(ext, StringComparison.OrdinalIgnoreCase));
+    }
+
+    static async Task UploadFirmware()
+    {
+        if (_currentDevice?.IsConnected != true)
+        {
+            Console.WriteLine("No device connected.");
+            return;
+        }
+
+        Console.WriteLine("[FIRMWARE] Firmware Upload");
+        Console.WriteLine("==================");
+        Console.WriteLine("[WARNING] Firmware updates can potentially brick your device!");
+        Console.WriteLine("   - Only upload firmware files specifically designed for your device");
+        Console.WriteLine("   - Ensure stable power supply during update");
+        Console.WriteLine("   - Do not disconnect device during firmware update");
+        Console.WriteLine();
+
+        Console.Write("Enter firmware file path (.bin file): ");
+        var input = Console.ReadLine()?.Trim();
+
+        if (string.IsNullOrEmpty(input))
+        {
+            Console.WriteLine("No file path provided.");
+            return;
+        }
+
+        // Handle paths with quotes
+        var filePath = input;
+        if ((filePath.StartsWith("\"") && filePath.EndsWith("\"")) ||
+            (filePath.StartsWith("'") && filePath.EndsWith("'")))
+        {
+            filePath = filePath.Substring(1, filePath.Length - 2);
+        }
+
+        if (!File.Exists(filePath))
+        {
+            Console.WriteLine($"File not found: {filePath}");
+            return;
+        }
+
+        var fileInfo = new FileInfo(filePath);
+        var fileName = fileInfo.Name;
+
+        // Verify it's a .bin file
+        if (!fileName.EndsWith(".bin", StringComparison.OrdinalIgnoreCase))
+        {
+            Console.WriteLine("[ERROR] Only .bin files are supported for firmware updates.");
+            return;
+        }
+
+        // Show firmware file information
+        Console.WriteLine($"\nFirmware File Information:");
+        Console.WriteLine($"  Name: {fileName}");
+        Console.WriteLine($"  Size: {fileInfo.Length:N0} bytes ({GetHumanReadableSize(fileInfo.Length)})");
+        Console.WriteLine($"  Path: {filePath}");
+        Console.WriteLine($"  Current device firmware: {_currentDevice.FirmwareVersion}");
+
+        // Final confirmation
+        Console.WriteLine("\n[WARNING] FIRMWARE UPDATE CONFIRMATION");
+        Console.Write("Are you sure you want to proceed with firmware update? (y/N): ");
+        var confirmation = Console.ReadLine()?.Trim().ToLower();
+        
+        if (confirmation != "y" && confirmation != "yes")
+        {
+            Console.WriteLine("Firmware update cancelled.");
+            return;
+        }
+
+        Console.WriteLine("\n[INFO] Starting firmware upload...");
+        Console.WriteLine("[INFO] Firmware update progress will be shown below when device begins processing");
+        Console.WriteLine("[WARNING] DO NOT DISCONNECT THE DEVICE DURING UPDATE!\n");
+
+        // Setup progress tracking for upload
+        var uploadStartTime = DateTime.Now;
+        var lastProgressTime = DateTime.Now;
+        var lastProgressBytes = 0L;
+        var fileSize = fileInfo.Length;
+
+        void OnProgress(object? sender, UploadProgressArgs args)
+        {
+            var now = DateTime.Now;
+            var currentBytes = (long)(fileSize * args.ProgressLevel / 100.0);
+            var elapsed = now - uploadStartTime;
+            var sinceLastUpdate = now - lastProgressTime;
+
+            var overallSpeed = elapsed.TotalSeconds > 0 ? currentBytes / elapsed.TotalSeconds : 0;
+            var recentSpeed = sinceLastUpdate.TotalSeconds > 0.1 ? 
+                (currentBytes - lastProgressBytes) / sinceLastUpdate.TotalSeconds : overallSpeed;
+
+            var remainingBytes = fileSize - currentBytes;
+            var eta = recentSpeed > 0 && remainingBytes > 0 ? TimeSpan.FromSeconds(remainingBytes / recentSpeed) : TimeSpan.Zero;
+            
+            // Ensure ETA is not negative or infinity
+            if (eta.TotalSeconds < 0 || double.IsInfinity(eta.TotalSeconds) || double.IsNaN(eta.TotalSeconds))
+            {
+                eta = TimeSpan.Zero;
+            }
+
+            var progressBar = CreateProgressBar(args.ProgressLevel, 30);
+            Console.Write($"\r[UPLOAD] Upload: {progressBar} {args.ProgressLevel:F1}% | " +
+                         $"{GetHumanReadableSize(currentBytes)}/{GetHumanReadableSize(fileSize)} | " +
+                         $"Speed: {GetHumanReadableSize((long)recentSpeed)}/s | " +
+                         $"ETA: {FormatTimeSpan(eta)}");
+
+            lastProgressTime = now;
+            lastProgressBytes = currentBytes;
+        }
+
+        void OnFinished(object? sender, bool success)
+        {
+            var totalTime = DateTime.Now - uploadStartTime;
+            Console.WriteLine(); // New line after progress bar
+            
+            if (success)
+            {
+                var avgSpeed = totalTime.TotalSeconds > 0 ? fileSize / totalTime.TotalSeconds : 0;
+                Console.WriteLine("[OK] Firmware file uploaded successfully!");
+                Console.WriteLine($"   Upload time: {FormatTimeSpanWithMs(totalTime)}");
+                Console.WriteLine($"   Average speed: {GetHumanReadableSize((long)avgSpeed)}/s");
+                Console.WriteLine("\n[INFO] Activating firmware update process...");
+                Console.WriteLine("[INFO] Device will now process the firmware - monitor progress below:");
+                
+                Task.Run(async () =>
+                {
+                    try
+                    {
+                        await _currentDevice.ActivateFileStorageScanAsync();
+                        Console.WriteLine("[OK] Firmware processing activated");
+                        Console.WriteLine("[INFO] Waiting for device to begin firmware update...");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[ERROR] Error activating firmware processing: {ex.Message}");
+                    }
+                });
+            }
+            else
+            {
+                Console.WriteLine("[ERROR] Firmware upload failed!");
+                Console.WriteLine($"   Upload time: {FormatTimeSpanWithMs(totalTime)}");
+                Console.WriteLine("   Device firmware was not updated");
+            }
+        }
+
+        _currentDevice.FileUploadProgress += OnProgress;
+        _currentDevice.FileUploadFinished += OnFinished;
+
+        try
+        {
+            await _currentDevice.SendNewFile(filePath);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"\n[ERROR] Firmware upload error: {ex.Message}");
+        }
+        finally
+        {
+            // Cleanup event handlers
+            _currentDevice.FileUploadProgress -= OnProgress;
+            _currentDevice.FileUploadFinished -= OnFinished;
+        }
+    }
+
+    static async Task FormatDisk()
+    {
+        if (_currentDevice?.IsConnected != true)
+        {
+            Console.WriteLine("No device connected.");
+            return;
+        }
+
+        Console.WriteLine("[FORMAT] Device Storage Format");
+        Console.WriteLine("==============================");
+        Console.WriteLine("[DANGER] FORMATTING WILL PERMANENTLY DELETE ALL DATA!");
+        Console.WriteLine("   - All files on the device will be deleted permanently");
+        Console.WriteLine("   - This action cannot be undone");
+        Console.WriteLine("   - Device settings may be reset to defaults");
+        Console.WriteLine("   - The device will be unusable until formatting completes");
+        Console.WriteLine();
+
+        // Show current storage info
+        try
+        {
+            await _currentDevice.GetFileListAsync();
+            await _currentDevice.GetFreeStorageSizeAsync();
+            await _currentDevice.GetTotalStorageSizeAsync();
+            
+            Console.WriteLine("Current Device Storage:");
+            Console.WriteLine($"   Total space: {GetHumanReadableSize(_currentDevice.TotalStorageSize)}");
+            Console.WriteLine($"   Used space: {GetHumanReadableSize(_currentDevice.TotalStorageSize - _currentDevice.FreeStorageSize)}");
+            Console.WriteLine($"   Files count: {_currentDevice.FileList.Count}");
+            Console.WriteLine($"   Current image: {_currentDevice.CurrentImageName ?? "None"}");
+            Console.WriteLine();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[WARNING] Could not retrieve storage info: {ex.Message}");
+            Console.WriteLine();
+        }
+
+        // Confirmation for destructive operation
+        Console.WriteLine("[WARNING] This will DELETE ALL FILES on the device!");
+        Console.Write("Are you sure you want to format the disk? (y/N): ");
+        var confirm1 = Console.ReadLine()?.Trim().ToLower();
+        if (confirm1 != "y" && confirm1 != "yes")
+        {
+            Console.WriteLine("Format operation cancelled.");
+            return;
+        }
+
+        Console.WriteLine("\n[FINAL WARNING] This action cannot be undone!");
+        Console.Write("Proceed with formatting? (y/N): ");
+        var confirm2 = Console.ReadLine()?.Trim().ToLower();
+        if (confirm2 != "y" && confirm2 != "yes")
+        {
+            Console.WriteLine("Format operation cancelled.");
+            return;
+        }
+
+        Console.WriteLine("\n[INFO] Starting disk format...");
+        Console.WriteLine("[WARNING] Do not disconnect the device during formatting!");
+        
+        var formatStartTime = DateTime.Now;
+        
+        try
+        {
+            var success = await _currentDevice.FormatDiskAsync();
+            var formatTime = DateTime.Now - formatStartTime;
+            
+            if (success)
+            {
+                Console.WriteLine($"\n[OK] Disk format completed successfully!");
+                Console.WriteLine($"   Format time: {FormatTimeSpanWithMs(formatTime)}");
+                Console.WriteLine("[INFO] Refreshing device information...");
+                
+                // Give the device a moment to complete the format
+                await Task.Delay(2000);
+                
+                // Refresh device information
+                try
+                {
+                    await _currentDevice.GetFileListAsync();
+                    await _currentDevice.GetFreeStorageSizeAsync();
+                    await _currentDevice.GetTotalStorageSizeAsync();
+                    
+                    Console.WriteLine("\n[POST-FORMAT] Storage Status:");
+                    Console.WriteLine($"   Total space: {GetHumanReadableSize(_currentDevice.TotalStorageSize)}");
+                    Console.WriteLine($"   Free space: {GetHumanReadableSize(_currentDevice.FreeStorageSize)}");
+                    Console.WriteLine($"   Files count: {_currentDevice.FileList.Count}");
+                    Console.WriteLine($"   Current image: {_currentDevice.CurrentImageName ?? "None"}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[WARNING] Could not refresh device info after format: {ex.Message}");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"\n[ERROR] Disk format failed!");
+                Console.WriteLine($"   Time elapsed: {FormatTimeSpanWithMs(formatTime)}");
+                Console.WriteLine("   Device storage was not formatted");
+            }
+        }
+        catch (Exception ex)
+        {
+            var formatTime = DateTime.Now - formatStartTime;
+            Console.WriteLine($"\n[ERROR] Format operation error: {ex.Message}");
+            Console.WriteLine($"   Time elapsed: {FormatTimeSpanWithMs(formatTime)}");
+            Console.WriteLine("   The device may need to be disconnected and reconnected");
+        }
+    }
+
+    static async Task RestartDevice()
+    {
+        if (_currentDevice?.IsConnected != true)
+        {
+            Console.WriteLine("No device connected.");
+            return;
+        }
+
+        Console.WriteLine("[RESTART] Device Restart");
+        Console.WriteLine("========================");
+        Console.WriteLine("[INFO] This will restart the BusyTag device");
+        Console.WriteLine("   - Device will reboot and become temporarily unavailable");
+        Console.WriteLine("   - You will need to reconnect after the restart");
+        Console.WriteLine("   - Current settings will be preserved");
+        Console.WriteLine();
+
+        Console.Write("Are you sure you want to restart the device? (y/N): ");
+        var confirm = Console.ReadLine()?.Trim().ToLower();
+        
+        if (confirm != "y" && confirm != "yes")
+        {
+            Console.WriteLine("Restart cancelled.");
+            return;
+        }
+
+        var deviceName = _currentDevice.DeviceName;
+        var portName = _currentDevice.PortName;
+        
+        Console.WriteLine($"\n[INFO] Restarting device '{deviceName}'...");
+        
+        try
+        {
+            var success = await _currentDevice.RestartDeviceAsync();
+            
+            if (success)
+            {
+                Console.WriteLine("[OK] Restart command sent successfully!");
+                Console.WriteLine("[INFO] Device is now restarting...");
+                
+                // Disconnect our current connection since device is restarting
+                _currentDevice.Disconnect();
+                
+                Console.WriteLine($"[INFO] Disconnected from {portName}");
+                Console.WriteLine("[INFO] Device will take a few seconds to restart");
+                Console.WriteLine("[INFO] You can try to reconnect in about 3-5 seconds");;
+                Console.WriteLine();
+                
+                // Offer to automatically reconnect
+                Console.Write("Would you like to automatically attempt reconnection? (Y/n): ");
+                var autoReconnect = Console.ReadLine()?.Trim().ToLower();
+                
+                if (autoReconnect != "n" && autoReconnect != "no")
+                {
+                    Console.WriteLine("[INFO] Waiting for device to restart...");
+                    
+                    // Wait for device to restart
+                    for (int i = 3; i > 0; i--)
+                    {
+                        Console.Write($"\rWaiting {i} seconds before reconnection attempt...");
+                        await Task.Delay(1000);
+                    }
+                    Console.WriteLine();
+                    
+                    // Attempt to reconnect
+                    Console.WriteLine($"[INFO] Attempting to reconnect to {portName}...");
+                    
+                    var reconnectAttempts = 0;
+                    const int maxAttempts = 5;
+                    
+                    while (reconnectAttempts < maxAttempts)
+                    {
+                        try
+                        {
+                            reconnectAttempts++;
+                            Console.WriteLine($"[INFO] Reconnection attempt {reconnectAttempts}/{maxAttempts}...");
+                            
+                            await ConnectToDevice(portName);
+                            
+                            if (_currentDevice?.IsConnected == true)
+                            {
+                                Console.WriteLine($"[OK] Successfully reconnected to '{_currentDevice.DeviceName}'!");
+                                Console.WriteLine($"   Firmware: {_currentDevice.FirmwareVersion}");
+                                Console.WriteLine($"   Device appears to have restarted successfully");
+                                return;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[WARNING] Reconnection attempt {reconnectAttempts} failed: {ex.Message}");
+                        }
+                        
+                        if (reconnectAttempts < maxAttempts)
+                        {
+                            Console.WriteLine("[INFO] Waiting 3 seconds before next attempt...");
+                            await Task.Delay(3000);
+                        }
+                    }
+                    
+                    Console.WriteLine($"[WARNING] Could not automatically reconnect after {maxAttempts} attempts");
+                    Console.WriteLine($"[INFO] You can manually reconnect to {portName} when the device is ready");
+                }
+            }
+            else
+            {
+                Console.WriteLine("[ERROR] Failed to send restart command!");
+                Console.WriteLine("   The device may not support remote restart");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERROR] Restart operation error: {ex.Message}");
+            Console.WriteLine("   The device connection may have been lost");
+            
+            // Ensure we disconnect if there was an error
+            try
+            {
+                _currentDevice.Disconnect();
+            }
+            catch
+            {
+                // Ignore disconnect errors
+            }
+        }
+    }
+
     static async Task RunInteractiveMode()
     {
         _manager = new BusyTagManager();
-        
-        // Disable verbose logging to reduce console spam
-        _manager.EnableVerboseLogging = false;
         
         // Set up event handlers
         _manager.FoundBusyTagSerialDevices += OnDevicesFound;
@@ -129,6 +600,18 @@ class Program
                         await DeleteFile();
                         break;
                     case "12":
+                        await ScanDeviceStorage();
+                        break;
+                    case "13":
+                        await UploadFirmware();
+                        break;
+                    case "14":
+                        await FormatDisk();
+                        break;
+                    case "15":
+                        await RestartDevice();
+                        break;
+                    case "16":
                         DisconnectDevice();
                         break;
                     case "0":
@@ -180,7 +663,11 @@ class Program
         Console.WriteLine("9. Set current image");
         Console.WriteLine("10. Download file");
         Console.WriteLine("11. Delete file");
-        Console.WriteLine("12. Disconnect");
+        Console.WriteLine("12. Scan device storage");
+        Console.WriteLine("13. Upload firmware (.bin)");
+        Console.WriteLine("14. Format disk (DANGER!)");
+        Console.WriteLine("15. Restart device");
+        Console.WriteLine("16. Disconnect");
         Console.WriteLine("0. Exit");
         Console.WriteLine();
         Console.Write("Enter your choice: ");
@@ -531,7 +1018,7 @@ class Program
 
         if (fileSize > _currentDevice.FreeStorageSize)
         {
-            Console.WriteLine("⚠️  Warning: File size exceeds available storage space.");
+            Console.WriteLine($"\n[WARNING] File size exceeds available storage space.");
             Console.Write("Continue anyway? (y/N): ");
             var confirm = Console.ReadLine()?.Trim().ToLower();
             if (confirm != "y" && confirm != "yes")
@@ -571,7 +1058,13 @@ class Program
 
             // Calculate ETA
             var remainingBytes = fileSize - currentBytes;
-            var eta = recentSpeed > 0 ? TimeSpan.FromSeconds(remainingBytes / recentSpeed) : TimeSpan.Zero;
+            var eta = recentSpeed > 0 && remainingBytes > 0 ? TimeSpan.FromSeconds(remainingBytes / recentSpeed) : TimeSpan.Zero;
+            
+            // Ensure ETA is not negative or infinity
+            if (eta.TotalSeconds < 0 || double.IsInfinity(eta.TotalSeconds) || double.IsNaN(eta.TotalSeconds))
+            {
+                eta = TimeSpan.Zero;
+            }
 
             // Update progress display
             var progressBar = CreateProgressBar(args.ProgressLevel, 30);
@@ -592,14 +1085,51 @@ class Program
             if (success)
             {
                 var avgSpeed = totalTime.TotalSeconds > 0 ? fileSize / totalTime.TotalSeconds : 0;
-                Console.WriteLine($"✅ Upload completed successfully!");
-                Console.WriteLine($"   Time: {FormatTimeSpan(totalTime)}");
+                Console.WriteLine("[OK] Upload completed successfully!");
+                Console.WriteLine($"   Time: {FormatTimeSpanWithMs(totalTime)}");
                 Console.WriteLine($"   Average speed: {GetHumanReadableSize((long)avgSpeed)}/s");
+                
+                // Check if uploaded file is a .bin file and trigger storage scan
+                if (fileName.EndsWith(".bin", StringComparison.OrdinalIgnoreCase))
+                {
+                    Console.WriteLine("\n[INFO] Binary file detected - activating device storage scan...");
+                    Console.WriteLine("[INFO] Monitoring firmware update progress...");
+                    Console.WriteLine("   Note: If this is a firmware file, update progress will be shown below");
+                    
+                    Task.Run(async () =>
+                    {
+                        try
+                        {
+                            var scanSuccess = await _currentDevice.ActivateFileStorageScanAsync();
+                            if (scanSuccess)
+                            {
+                                Console.WriteLine("[OK] Device storage scan activated successfully!");
+                                Console.WriteLine("   Device is now scanning and updating file system...");
+                                
+                                // Wait a moment for the scan to process
+                                await Task.Delay(1000);
+                                
+                                // Refresh file list after scan
+                                Console.WriteLine("[INFO] Refreshing file list...");
+                                await _currentDevice.GetFileListAsync();
+                                Console.WriteLine($"   Files on device: {_currentDevice.FileList.Count}");
+                            }
+                            else
+                            {
+                                Console.WriteLine("[WARNING] Storage scan activation failed");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[ERROR] Error activating storage scan: {ex.Message}");
+                        }
+                    });
+                }
             }
             else
             {
-                Console.WriteLine($"❌ Upload failed!");
-                Console.WriteLine($"   Time elapsed: {FormatTimeSpan(totalTime)}");
+                Console.WriteLine("[ERROR] Upload failed!");
+                Console.WriteLine($"   Time elapsed: {FormatTimeSpanWithMs(totalTime)}");
             }
         }
 
@@ -612,7 +1142,7 @@ class Program
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"\n❌ Upload error: {ex.Message}");
+            Console.WriteLine($"\n[ERROR] Upload error: {ex.Message}");
         }
         finally
         {
@@ -644,12 +1174,26 @@ class Program
 
     static string FormatTimeSpan(TimeSpan timeSpan)
     {
-        if (timeSpan.TotalSeconds < 60)
+        if (timeSpan.TotalSeconds < 1)
+            return "0s";
+        else if (timeSpan.TotalSeconds < 60)
             return $"{timeSpan.TotalSeconds:F0}s";
         else if (timeSpan.TotalMinutes < 60)
             return $"{timeSpan.Minutes}m {timeSpan.Seconds}s";
         else
             return $"{timeSpan.Hours}h {timeSpan.Minutes}m {timeSpan.Seconds}s";
+    }
+
+    static string FormatTimeSpanWithMs(TimeSpan timeSpan)
+    {
+        if (timeSpan.TotalSeconds < 1)
+            return $"{timeSpan.TotalMilliseconds:F0}ms";
+        else if (timeSpan.TotalSeconds < 60)
+            return $"{timeSpan.TotalSeconds:F3}s";
+        else if (timeSpan.TotalMinutes < 60)
+            return $"{timeSpan.Minutes}m {timeSpan.Seconds}.{timeSpan.Milliseconds:D3}s";
+        else
+            return $"{timeSpan.Hours}h {timeSpan.Minutes}m {timeSpan.Seconds}.{timeSpan.Milliseconds:D3}s";
     }
 
     static async Task ListFiles()
@@ -733,7 +1277,10 @@ class Program
             var files = await _currentDevice.GetFileListAsync();
             var imageFiles = files.Where(f => 
                 f.Name.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ||
-                f.Name.EndsWith(".gif", StringComparison.OrdinalIgnoreCase)
+                f.Name.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) ||
+                f.Name.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase) ||
+                f.Name.EndsWith(".gif", StringComparison.OrdinalIgnoreCase) ||
+                f.Name.EndsWith(".bmp", StringComparison.OrdinalIgnoreCase)
             ).ToList();
 
             if (imageFiles.Count == 0)
@@ -871,15 +1418,15 @@ class Program
                 var downloadTime = DateTime.Now - downloadStartTime;
                 var avgSpeed = downloadTime.TotalSeconds > 0 ? selectedFile.Size / downloadTime.TotalSeconds : 0;
                 
-                Console.WriteLine($"✅ Download completed successfully!");
+                Console.WriteLine("[OK] Download completed successfully!");
                 Console.WriteLine($"   File: {fullPath}");
                 Console.WriteLine($"   Size: {GetHumanReadableSize(selectedFile.Size)}");
-                Console.WriteLine($"   Time: {FormatTimeSpan(downloadTime)}");
+                Console.WriteLine($"   Time: {FormatTimeSpanWithMs(downloadTime)}");
                 Console.WriteLine($"   Average speed: {GetHumanReadableSize((long)avgSpeed)}/s");
             }
             else
             {
-                Console.WriteLine("❌ Download failed!");
+                Console.WriteLine("[ERROR] Download failed!");
             }
         }
         catch (Exception ex)
@@ -932,7 +1479,7 @@ class Program
             
             if (selectedFile.Name == _currentDevice.CurrentImageName)
             {
-                Console.WriteLine("⚠️  Warning: This is the currently displayed image!");
+                Console.WriteLine("[WARNING] This is the currently displayed image!");
             }
 
             Console.Write($"Are you sure you want to delete '{selectedFile.Name}'? This cannot be undone! (y/N): ");
@@ -950,14 +1497,14 @@ class Program
             
             if (success)
             {
-                Console.WriteLine($"✅ File '{selectedFile.Name}' deleted successfully!");
+                Console.WriteLine($"[OK] File '{selectedFile.Name}' deleted successfully!");
                 
                 await _currentDevice.GetFreeStorageSizeAsync();
                 Console.WriteLine($"   Free space: {GetHumanReadableSize(_currentDevice.FreeStorageSize)}");
             }
             else
             {
-                Console.WriteLine($"❌ Failed to delete '{selectedFile.Name}'");
+                Console.WriteLine($"[ERROR] Failed to delete '{selectedFile.Name}'");
             }
         }
         catch (Exception ex)
@@ -990,6 +1537,31 @@ class Program
         {
             Console.WriteLine($"Now showing: {imageName}");
         };
+
+        device.FirmwareUpdateStatus += (sender, progress) =>
+        {
+            var progressBar = CreateProgressBar(progress, 40);
+            Console.Write($"\rFirmware Update: {progressBar} {progress:F1}%");
+            
+            if (progress >= 100.0f)
+            {
+                Console.WriteLine(); // New line when complete
+                Console.WriteLine("[OK] Firmware update completed successfully!");
+                Console.WriteLine("[WARNING] Device may restart automatically...");
+            }
+        };
+
+        device.WritingInStorage += (sender, isWriting) =>
+        {
+            // if (isWriting)
+            // {
+            //     Console.WriteLine("[INFO] Device is writing to storage...");
+            // }
+            // else
+            // {
+            //     Console.WriteLine("[OK] Storage write operation completed");
+            // }
+        };
     }
     
     static void OnDevicesFound(object? sender, List<string>? devices)
@@ -1005,7 +1577,7 @@ class Program
             {
                 if (devicesChanged)
                 {
-                    Console.WriteLine($"\n Found {devices.Count} BusyTag device(s): {string.Join(", ", devices)}");
+                    Console.WriteLine($"\n[FOUND] {devices.Count} BusyTag device(s): {string.Join(", ", devices)}");
                 }
                 _lastFoundDevices = devices.ToList();
                 _lastDeviceMessage = now;
@@ -1013,7 +1585,7 @@ class Program
         }
         else if (_lastFoundDevices != null && _lastFoundDevices.Count > 0)
         {
-            Console.WriteLine("\n✗ No BusyTag devices found");
+            Console.WriteLine("\n[INFO] No BusyTag devices found");
             _lastFoundDevices = null;
             _lastDeviceMessage = now;
         }
