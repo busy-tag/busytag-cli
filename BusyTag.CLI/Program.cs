@@ -256,12 +256,12 @@ class Program
             lastProgressBytes = currentBytes;
         }
 
-        void OnFinished(object? sender, bool success)
+        void OnFinished(object? sender, FileUploadFinishedArgs fileUploadFinishedArgs)
         {
             var totalTime = DateTime.Now - uploadStartTime;
             Console.WriteLine(); // New line after progress bar
             
-            if (success)
+            if (fileUploadFinishedArgs.Success)
             {
                 var avgSpeed = totalTime.TotalSeconds > 0 ? fileSize / totalTime.TotalSeconds : 0;
                 Console.WriteLine("[OK] Firmware file uploaded successfully!");
@@ -1077,12 +1077,12 @@ class Program
             lastProgressBytes = currentBytes;
         }
 
-        void OnFinished(object? sender, bool success)
+        void OnFinished(object? sender, FileUploadFinishedArgs fileUploadFinishedArgs)
         {
             var totalTime = DateTime.Now - uploadStartTime;
             Console.WriteLine(); // New line after progress bar
             
-            if (success)
+            if (fileUploadFinishedArgs.Success)
             {
                 var avgSpeed = totalTime.TotalSeconds > 0 ? fileSize / totalTime.TotalSeconds : 0;
                 Console.WriteLine("[OK] Upload completed successfully!");
