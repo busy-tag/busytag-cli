@@ -41,8 +41,15 @@ jobs:
           cd homebrew-tap
           
           # Update version, URL, and SHA256 in the formula
-          sed -i "s|url \".*\"|url \"${{ steps.release.outputs.download_url }}\"|g" busytag-cli.rb
-          sed -i "s|sha256 \".*\"|sha256 \"${{ steps.sha256.outputs.sha256 }}\"|g" busytag-cli.rb
+          sed -i "s|url \".*\"|url \"${{ steps.release.outputs.download_url }}\"|g" Formula/busytag-cli.rb
+          sed -i "s|sha256 \".*\"|sha256 \"${{ steps.sha256.outputs.sha256 }}\"|g" Formula/busytag-cli.rb
+          
+          # Update version if it's referenced in the file
+          sed -i "s|version \".*\"|version \"${{ steps.release.outputs.version }}\"|g" Formula/busytag-cli.rb
+          
+          echo "✅ Formula updated successfully!"
+          echo "📄 Updated Formula/busytag-cli.rb:"
+          cat Formula/busytag-cli.rb
 
       - name: Commit and push changes
         run: |
@@ -60,4 +67,4 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Version:** ${{ steps.release.outputs.tag_name }}" >> $GITHUB_STEP_SUMMARY
           echo "**SHA256:** ${{ steps.sha256.outputs.sha256 }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Formula:** https://github.com/${{ secrets.HOMEBREW_TAP_REPO }}/blob/main/busytag-cli.rb" >> $GITHUB_STEP_SUMMARY
+          echo "**Formula:** https://github.com/${{ secrets.HOMEBREW_TAP_REPO }}/blob/main/Formula/busytag-cli.rb" >> $GITHUB_STEP_SUMMARY
