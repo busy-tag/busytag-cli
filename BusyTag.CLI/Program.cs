@@ -46,7 +46,7 @@ class Program
             }
             else
             {
-                Console.WriteLine("Usage: BusyTag connect <port_name>");
+                Console.WriteLine("Usage: busytag-cli connect <port_name>");
             }
             break;
             
@@ -57,7 +57,7 @@ class Program
             }
             else
             {
-                Console.WriteLine("Usage: BusyTag info <port_name>");
+                Console.WriteLine("Usage: busytag-cli info <port_name>");
             }
             break;
             
@@ -139,7 +139,7 @@ static async Task HandleColorCommand(string[] args)
 {
     if (args.Length < 3)
     {
-        Console.WriteLine("Usage: BusyTag color <port> <color> [brightness] [led_bits]");
+        Console.WriteLine("Usage: busytag-cli color <port> <color> [brightness] [led_bits]");
         Console.WriteLine("Examples:");
         Console.WriteLine("  BusyTag color COM3 red");
         Console.WriteLine("  BusyTag color COM3 FF0000 50");
@@ -164,7 +164,7 @@ static async Task HandleColorCommand(string[] args)
 
         bool success = false;
 
-        // Check if it's RGB format
+        // Check if it's the RGB format
         if (color.Contains(','))
         {
             var rgbParts = color.Split(',');
@@ -193,7 +193,7 @@ static async Task HandleColorCommand(string[] args)
             
             success = await device.SendRgbColorAsync(r, g, bb, ledBits);
         }
-        // Otherwise treat as color name
+        // Otherwise treat as a color name
         else
         {
             success = await device.SetSolidColorAsync(color.ToLower(), brightness, ledBits);
@@ -215,9 +215,9 @@ static async Task HandleBrightnessCommand(string[] args)
 {
     if (args.Length < 3)
     {
-        Console.WriteLine("Usage: BusyTag brightness <port> <level>");
+        Console.WriteLine("Usage: busytag-cli brightness <port> <level>");
         Console.WriteLine("  level: 0-100");
-        Console.WriteLine("Example: BusyTag brightness COM3 75");
+        Console.WriteLine("Example: busytag-cli brightness COM3 75");
         return;
     }
 
@@ -255,8 +255,8 @@ static async Task HandleUploadCommand(string[] args)
 {
     if (args.Length < 3)
     {
-        Console.WriteLine("Usage: BusyTag upload <port> <file_path>");
-        Console.WriteLine("Example: BusyTag upload COM3 \"C:\\images\\photo.png\"");
+        Console.WriteLine("Usage: busytag-cli upload <port> <file_path>");
+        Console.WriteLine("Example: busytag-cli upload COM3 \"C:\\images\\photo.png\"");
         return;
     }
 
@@ -299,8 +299,8 @@ static async Task HandleDownloadCommand(string[] args)
 {
     if (args.Length < 4)
     {
-        Console.WriteLine("Usage: BusyTag download <port> <filename> <destination_path>");
-        Console.WriteLine("Example: BusyTag download COM3 photo.png \"C:\\downloads\\\"");
+        Console.WriteLine("Usage: busytag-cli download <port> <filename> <destination_path>");
+        Console.WriteLine("Example: busytag-cli download COM3 photo.png \"C:\\downloads\\\"");
         return;
     }
 
@@ -346,8 +346,8 @@ static async Task HandleDeleteCommand(string[] args)
 {
     if (args.Length < 3)
     {
-        Console.WriteLine("Usage: BusyTag delete <port> <filename>");
-        Console.WriteLine("Example: BusyTag delete COM3 photo.png");
+        Console.WriteLine("Usage: busytag-cli delete <port> <filename>");
+        Console.WriteLine("Example: busytag-cli delete COM3 photo.png");
         return;
     }
 
@@ -382,8 +382,8 @@ static async Task HandleFilesCommand(string[] args)
 {
     if (args.Length < 2)
     {
-        Console.WriteLine("Usage: BusyTag files <port>");
-        Console.WriteLine("Example: BusyTag files COM3");
+        Console.WriteLine("Usage: busytag-cli files <port>");
+        Console.WriteLine("Example: busytag-cli files COM3");
         return;
     }
 
@@ -428,8 +428,8 @@ static async Task HandleShowImageCommand(string[] args)
 {
     if (args.Length < 3)
     {
-        Console.WriteLine("Usage: BusyTag show <port> <filename>");
-        Console.WriteLine("Example: BusyTag show COM3 photo.png");
+        Console.WriteLine("Usage: busytag-cli show <port> <filename>");
+        Console.WriteLine("Example: busytag-cli show COM3 photo.png");
         return;
     }
 
@@ -463,7 +463,7 @@ static async Task HandlePatternCommand(string[] args)
 {
     if (args.Length < 3)
     {
-        Console.WriteLine("Usage: BusyTag pattern <port> <pattern_name>");
+        Console.WriteLine("Usage: busytag-cli pattern <port> <pattern_name>");
         Console.WriteLine("Available patterns:");
         var patterns = PatternListCommands.PatternList;
         foreach (var pattern in patterns.Values)
@@ -514,8 +514,8 @@ static async Task HandleStorageCommand(string[] args)
 {
     if (args.Length < 2)
     {
-        Console.WriteLine("Usage: BusyTag storage <port>");
-        Console.WriteLine("Example: BusyTag storage COM3");
+        Console.WriteLine("Usage: busytag-cli storage <port>");
+        Console.WriteLine("Example: busytag-cli storage COM3");
         return;
     }
 
@@ -558,8 +558,8 @@ static async Task HandleFirmwareCommand(string[] args)
 {
     if (args.Length < 3)
     {
-        Console.WriteLine("Usage: BusyTag firmware <port> <firmware_file.bin>");
-        Console.WriteLine("Example: BusyTag firmware COM3 \"firmware_v2.1.bin\"");
+        Console.WriteLine("Usage: busytag-cli firmware <port> <firmware_file.bin>");
+        Console.WriteLine("Example: busytag-cli firmware COM3 \"firmware_v2.1.bin\"");
         return;
     }
 
@@ -610,8 +610,8 @@ static async Task HandleFormatCommand(string[] args)
 {
     if (args.Length < 2)
     {
-        Console.WriteLine("Usage: BusyTag format <port> [--force]");
-        Console.WriteLine("Example: BusyTag format COM3 --force");
+        Console.WriteLine("Usage: busytag-cli format <port> [--force]");
+        Console.WriteLine("Example: busytag-cli format COM3 --force");
         Console.WriteLine("WARNING: This will delete ALL data on the device!");
         return;
     }
@@ -654,8 +654,8 @@ static async Task HandleRestartCommand(string[] args)
 {
     if (args.Length < 2)
     {
-        Console.WriteLine("Usage: BusyTag restart <port>");
-        Console.WriteLine("Example: BusyTag restart COM3");
+        Console.WriteLine("Usage: busytag-cli restart <port>");
+        Console.WriteLine("Example: busytag-cli restart COM3");
         return;
     }
 
@@ -1079,7 +1079,7 @@ static void ShowVersion()
                 Console.WriteLine("[OK] Restart command sent successfully!");
                 Console.WriteLine("[INFO] Device is now restarting...");
                 
-                // Disconnect our current connection since device is restarting
+                // Disconnect our current connection since a device is restarting
                 _currentDevice.Disconnect();
                 
                 Console.WriteLine($"[INFO] Disconnected from {portName}");
@@ -1095,7 +1095,7 @@ static void ShowVersion()
                 {
                     Console.WriteLine("[INFO] Waiting for device to restart...");
                     
-                    // Wait for device to restart
+                    // Wait for a device to restart
                     for (int i = 3; i > 0; i--)
                     {
                         Console.Write($"\rWaiting {i} seconds before reconnection attempt...");
@@ -1156,7 +1156,7 @@ static void ShowVersion()
             // Ensure we disconnect if there was an error
             try
             {
-                _currentDevice.Disconnect();
+                _currentDevice?.Disconnect();
             }
             catch
             {
@@ -1530,7 +1530,7 @@ static void ShowHelp()
 
         try
         {
-            // Check if it's RGB format (e.g., "255,0,0")
+            // Check if it's an RGB format (e.g., "255,0,0")
             if (colorInput.Contains(','))
             {
                 var rgbParts = colorInput.Split(',');
@@ -1557,7 +1557,7 @@ static void ShowHelp()
                 }
             }
             
-            // Check if it's hex format (e.g., "FF0000" or "#FF0000")
+            // Check if it's a hex format (e.g., "FF0000" or "#FF0000")
             var hexColor = colorInput.Replace("#", "").ToUpper();
             if (hexColor.Length == 6 && IsValidHex(hexColor))
             {
@@ -1663,7 +1663,7 @@ static void ShowHelp()
         var fileName = fileInfo.Name;
         var fileSize = fileInfo.Length;
 
-        // Check if filename is too long
+        // Check if the filename is too long
         if (fileName.Length > 40) // MaxFilenameLength from BusyTagDevice
         {
             Console.WriteLine($"Filename too long ({fileName.Length} chars). Maximum allowed: 40 characters.");
@@ -1745,7 +1745,7 @@ static void ShowHelp()
         void OnFinished(object? sender, FileUploadFinishedArgs fileUploadFinishedArgs)
         {
             var totalTime = DateTime.Now - uploadStartTime;
-            Console.WriteLine(); // New line after progress bar
+            Console.WriteLine(); // New line after the progress bar
             
             if (fileUploadFinishedArgs.Success)
             {
@@ -1754,7 +1754,7 @@ static void ShowHelp()
                 Console.WriteLine($"   Time: {FormatTimeSpanWithMs(totalTime)}");
                 Console.WriteLine($"   Average speed: {GetHumanReadableSize((long)avgSpeed)}/s");
                 
-                // Check if uploaded file is a .bin file and trigger storage scan
+                // Check if an uploaded file is a .bin file and trigger a storage scan
                 if (fileName.EndsWith(".bin", StringComparison.OrdinalIgnoreCase))
                 {
                     Console.WriteLine("\n[INFO] Binary file detected - activating device storage scan...");
@@ -1765,7 +1765,7 @@ static void ShowHelp()
                     {
                         try
                         {
-                            var scanSuccess = await _currentDevice.ActivateFileStorageScanAsync();
+                            var scanSuccess = await _currentDevice?.ActivateFileStorageScanAsync();
                             if (scanSuccess)
                             {
                                 Console.WriteLine("[OK] Device storage scan activated successfully!");
@@ -1902,7 +1902,7 @@ static void ShowHelp()
             Console.Write($"Enter new brightness (0-100, current: {currentBrightness}%, or press Enter to keep current): ");
             var input = Console.ReadLine()?.Trim();
             
-            // If user just pressed Enter, keep current brightness
+            // If the user just pressed Enter, keep the current brightness
             if (string.IsNullOrEmpty(input))
             {
                 Console.WriteLine("Brightness unchanged.");
@@ -1935,7 +1935,7 @@ static void ShowHelp()
 
     try
     {
-        // Show current image
+        // Show the current image
         Console.WriteLine($"Current image: {(_currentDevice.CurrentImageName ?? "None")}");
         
         // Get and display available files
