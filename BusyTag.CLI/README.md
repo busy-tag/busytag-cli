@@ -1,8 +1,10 @@
 ﻿# BusyTag CLI - Device Manager Command Line Interface
 
+[![.NET Tool](https://img.shields.io/nuget/v/BusyTag.CLI?label=.NET%20Tool&color=blue)](https://www.nuget.org/packages/BusyTag.CLI)
 [![.NET](https://img.shields.io/badge/.NET-8.0+-blue.svg)](https://dotnet.microsoft.com/)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)](https://github.com/dotnet/core)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Downloads](https://img.shields.io/nuget/dt/BusyTag.CLI?color=green)](https://www.nuget.org/packages/BusyTag.CLI)
 
 A comprehensive command-line interface for managing BusyTag devices. Control your BusyTag displays, upload files, manage storage, update firmware, and more - all from the command line or through an interactive interface.
 
@@ -18,6 +20,7 @@ A comprehensive command-line interface for managing BusyTag devices. Control you
 - [Advanced Usage](#-advanced-usage)
 - [Configuration](#-configuration)
 - [Troubleshooting](#-troubleshooting)
+- [Contributing](#-contributing)
 
 ## ✨ Features
 
@@ -28,48 +31,77 @@ A comprehensive command-line interface for managing BusyTag devices. Control you
 - **🔧 Firmware Updates** - Upload and install firmware updates with progress tracking
 - **⚡ Interactive & Command-Line Modes** - Use as needed for automation or manual operation
 - **📊 Real-time Monitoring** - Progress bars, status updates, and event tracking
+- **🌍 Cross-Platform** - Works on Windows, macOS, and Linux
 
 ## 🚀 Installation
 
 ### Prerequisites
-- .NET 8.0 or later
-- Windows, macOS, or Linux
-- BusyTag device with USB/Serial connection
+- **.NET 8.0 Runtime** or later
+- **BusyTag device** with USB/Serial connection
+- **Operating System**: Windows, macOS, or Linux
 
-### From Source
+### Method 1: .NET Global Tool (Recommended)
+Install as a global tool using the .NET CLI:
+
 ```bash
+# Install the latest version
+dotnet tool install -g BusyTag.CLI
+
+# Verify installation
+busytag-cli --version
+
+# Update to latest version
+dotnet tool update -g BusyTag.CLI
+
+# Uninstall if needed
+dotnet tool uninstall -g BusyTag.CLI
+```
+
+### Method 2: From Source
+For development or building from source:
+
+```bash
+# Clone the repository
 git clone https://github.com/busy-tag/busytag-cli.git
-cd BusyTag.CLI
+cd busytag-cli
+
+# Build and run
 dotnet build -c Release
+dotnet run -- --help
+
+# Or build self-contained executable
 dotnet publish -c Release --self-contained -r win-x64    # Windows
 dotnet publish -c Release --self-contained -r osx-x64    # macOS
 dotnet publish -c Release --self-contained -r linux-x64  # Linux
 ```
 
-### Using .NET Tool (Coming Soon)
+### Method 3: Download Binary Release
+Download pre-built binaries from the [Releases](https://github.com/busy-tag/busytag-cli/releases) page.
+
+## 🎯 Quick Start
+
+### 1. Install the Tool
 ```bash
 dotnet tool install -g BusyTag.CLI
 ```
 
-## 🎯 Quick Start
-
-### 1. Find Your Device
+### 2. Find Your Device
 ```bash
 busytag-cli scan
 # Output: Found 1 device(s): COM3
 ```
 
-### 2. Connect and Check Status
+### 3. Connect and Check Status
 ```bash
 busytag-cli info COM3
 ```
 
-### 3. Set Display Color
+### 4. Set Display Color
 ```bash
 busytag-cli color COM3 blue 75
 ```
 
-### 4. Upload and Display an Image
+### 5. Upload and Display an Image
 ```bash
 busytag-cli upload COM3 "my-image.png"
 busytag-cli show COM3 "my-image.png"
@@ -268,6 +300,24 @@ while True:
     time.sleep(3600)
 ```
 
+#### Docker Integration
+```dockerfile
+# Dockerfile for automated BusyTag control
+FROM mcr.microsoft.com/dotnet/runtime:8.0
+
+# Install BusyTag CLI
+RUN dotnet tool install -g BusyTag.CLI
+
+# Add to PATH
+ENV PATH="$PATH:/root/.dotnet/tools"
+
+# Your automation script
+COPY automation-script.sh /app/
+RUN chmod +x /app/automation-script.sh
+
+CMD ["/app/automation-script.sh"]
+```
+
 ### Maintenance Operations
 ```bash
 # Backup all files
@@ -325,7 +375,13 @@ jobs:
   update-display:
     runs-on: self-hosted  # Requires runner with device access
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Install BusyTag CLI
+        run: dotnet tool install -g BusyTag.CLI
       - name: Update display for successful build
         run: |
           busytag-cli scan
@@ -446,6 +502,20 @@ busytag-cli info <port>
 - ✅ Don't disconnect during update
 - ✅ Have recovery firmware ready
 
+#### 🛠️ Tool Installation Issues
+```bash
+# Check if .NET is installed
+dotnet --version
+
+# Clear tool cache and reinstall
+dotnet tool uninstall -g BusyTag.CLI
+dotnet nuget locals all --clear
+dotnet tool install -g BusyTag.CLI
+
+# Check tool path
+echo $PATH | grep -o '[^:]*\.dotnet[^:]*'
+```
+
 ### Error Codes
 
 | Error | Description | Solution |
@@ -456,6 +526,7 @@ busytag-cli info <port>
 | **Invalid Format** | Unsupported file | Use PNG/GIF for images, .bin for firmware |
 | **Timeout** | Operation took too long | Increase timeout or check connection |
 | **Device Busy** | Another operation in progress | Wait or restart device |
+| **Tool Not Found** | CLI not in PATH | Reinstall tool or check PATH |
 
 ### Debug Mode
 ```bash
@@ -474,14 +545,39 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📈 Changelog
 
+### Version 1.0.0
+- 🎉 Initial stable release
+- 🔌 Full device connection and control
+- 📁 Complete file management functionality
+- 🎨 Advanced color and brightness control
+- 🔧 Firmware update capabilities
+- 📊 Interactive mode with progress tracking
+- 🌍 Cross-platform support (Windows, macOS, Linux)
+
 ### Version 0.1.0
-- 🎉 Initial release
+- 🎉 Initial beta release
 - 🔌 Basic device connection and control
 - 📁 File upload/download functionality
 - 🎨 Color and brightness control
+
+## 🔗 Links
+
+- **GitHub Repository**: [https://github.com/busy-tag/busytag-cli](https://github.com/busy-tag/busytag-cli)
+- **NuGet Package**: [https://www.nuget.org/packages/BusyTag.CLI](https://www.nuget.org/packages/BusyTag.CLI)
+- **Issues & Support**: [https://github.com/busy-tag/busytag-cli/issues](https://github.com/busy-tag/busytag-cli/issues)
+- **BusyTag Hardware**: [Contact BUSY TAG SIA for device information]
+
+## 🎯 Roadmap
+
+- 🔄 **Auto-update mechanism** for CLI tool
+- 🎨 **Custom pattern editor** in interactive mode
+- 📱 **Mobile device support** via Bluetooth
+- 🌐 **Web dashboard** for remote management
+- 🔌 **Plugin system** for extended functionality
+- 📊 **Analytics and monitoring** dashboard
 
 ---
 
 **Made with ❤️ by BUSY TAG SIA**
 
-For support, please check the [troubleshooting section](#-troubleshooting) or contact our support team.
+For support, please check the [troubleshooting section](#-troubleshooting) or [open an issue](https://github.com/busy-tag/busytag-cli/issues) on GitHub.
