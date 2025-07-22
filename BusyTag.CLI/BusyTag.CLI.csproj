@@ -8,14 +8,9 @@
         <AssemblyName>busytag-cli</AssemblyName>
         <RootNamespace>BusyTag.CLI</RootNamespace>
 
-        <!-- .NET Tool Configuration -->
-        <PackAsTool>true</PackAsTool>
-        <ToolCommandName>busytag-cli</ToolCommandName>
-        <PackageOutputPath>./nupkg</PackageOutputPath>
-
         <!-- Package Information -->
         <PackageId>BusyTag.CLI</PackageId>
-        <Version>0.1.0</Version>
+        <Version>0.2.0</Version>
         <Authors>BUSY TAG SIA</Authors>
         <Company>BUSY TAG SIA</Company>
         <Product>BusyTag CLI</Product>
@@ -30,11 +25,6 @@
         <PackageIcon>icon.png</PackageIcon>
         <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 
-        <!-- Runtime Configuration for Tool -->
-        <UseAppHost>true</UseAppHost>
-        <PublishSingleFile>false</PublishSingleFile>
-        <SelfContained>false</SelfContained>
-
         <!-- Release Information -->
         <PackageReleaseNotes>
             Initial release of BusyTag CLI tool.
@@ -46,6 +36,23 @@
             - Firmware update capabilities
             - Interactive and command-line modes
         </PackageReleaseNotes>
+    </PropertyGroup>
+
+    <!-- .NET Tool Configuration (only when building as tool) -->
+    <PropertyGroup Condition="'$(BuildForTool)' == 'true'">
+        <PackAsTool>true</PackAsTool>
+        <ToolCommandName>busytag-cli</ToolCommandName>
+        <PackageOutputPath>./nupkg</PackageOutputPath>
+        <UseAppHost>true</UseAppHost>
+        <PublishSingleFile>false</PublishSingleFile>
+        <SelfContained>false</SelfContained>
+    </PropertyGroup>
+
+    <!-- Homebrew/Self-Contained Configuration (default) -->
+    <PropertyGroup Condition="'$(BuildForTool)' != 'true'">
+        <UseAppHost>true</UseAppHost>
+        <PublishSingleFile Condition="'$(PublishSingleFile)' == ''">true</PublishSingleFile>
+        <SelfContained Condition="'$(SelfContained)' == ''">true</SelfContained>
     </PropertyGroup>
 
     <ItemGroup>
