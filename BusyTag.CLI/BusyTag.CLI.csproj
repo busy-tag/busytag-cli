@@ -10,7 +10,7 @@
 
         <!-- Package Information -->
         <PackageId>BusyTag.CLI</PackageId>
-        <Version>0.3.0</Version>
+        <Version>0.3.2</Version>
         <Authors>BUSY TAG SIA</Authors>
         <Company>BUSY TAG SIA</Company>
         <Product>BusyTag CLI</Product>
@@ -62,10 +62,6 @@
 
     <ItemGroup>
         <PackageReference Include="BusyTag.Lib" Version="0.2.3" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Content Include=".github\workflows\update-homebrew.yml" />
     </ItemGroup>
 
 </Project>
