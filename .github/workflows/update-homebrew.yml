@@ -3,6 +3,7 @@
 on:
   release:
     types: [published]
+  workflow_dispatch:  # Allow manual triggering for testing
 
 jobs:
   update-homebrew-tap:
@@ -42,9 +43,6 @@ jobs:
           # Update version, URL, and SHA256 in the formula
           sed -i "s|url \".*\"|url \"${{ steps.release.outputs.download_url }}\"|g" busytag-cli.rb
           sed -i "s|sha256 \".*\"|sha256 \"${{ steps.sha256.outputs.sha256 }}\"|g" busytag-cli.rb
-          
-          # Update version if it's referenced in the file
-          sed -i "s|version \".*\"|version \"${{ steps.release.outputs.version }}\"|g" busytag-cli.rb
 
       - name: Commit and push changes
         run: |
@@ -52,7 +50,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          git add busytag-cli.rb
+          git add Formula/busytag-cli.rb
           git commit -m "Update busytag-cli to ${{ steps.release.outputs.tag_name }}"
           git push origin main
 
