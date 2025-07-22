@@ -1297,7 +1297,7 @@ static void ShowHelp()
 {
     Console.WriteLine("BusyTag Device Manager CLI");
     Console.WriteLine("==========================");
-    Console.WriteLine("Usage: BusyTag [command] [arguments]");
+    Console.WriteLine("Usage: busytag-cli [command] [arguments]");
     Console.WriteLine();
     Console.WriteLine("Device Management:");
     Console.WriteLine("  scan, list              - Scan for BusyTag devices");
@@ -1339,20 +1339,20 @@ static void ShowHelp()
     Console.WriteLine("  RGB values: 255,0,0 (red)");
     Console.WriteLine();
     Console.WriteLine("Examples:");
-    Console.WriteLine("  BusyTag scan");
-    Console.WriteLine("  BusyTag connect COM3");
-    Console.WriteLine("  BusyTag info /dev/ttyUSB0");
-    Console.WriteLine("  BusyTag color COM3 red 75");
-    Console.WriteLine("  BusyTag color COM3 FF0000 50 127");
-    Console.WriteLine("  BusyTag color COM3 255,128,0");
-    Console.WriteLine("  BusyTag brightness COM3 80");
-    Console.WriteLine("  BusyTag upload COM3 \"photo.png\"");
-    Console.WriteLine("  BusyTag files COM3");
-    Console.WriteLine("  BusyTag show COM3 photo.png");
-    Console.WriteLine("  BusyTag storage COM3");
-    Console.WriteLine("  BusyTag delete COM3 old_image.png");
-    Console.WriteLine("  BusyTag firmware COM3 \"firmware_v2.1.bin\"");
-    Console.WriteLine("  BusyTag format COM3 --force");
+    Console.WriteLine("  busytag-cli scan");
+    Console.WriteLine("  busytag-cli connect COM3");
+    Console.WriteLine("  busytag-cli info /dev/ttyUSB0");
+    Console.WriteLine("  busytag-cli color COM3 red 75");
+    Console.WriteLine("  busytag-cli color COM3 FF0000 50 127");
+    Console.WriteLine("  busytag-cli color COM3 255,128,0");
+    Console.WriteLine("  busytag-cli brightness COM3 80");
+    Console.WriteLine("  busytag-cli upload COM3 \"photo.png\"");
+    Console.WriteLine("  busytag-cli files COM3");
+    Console.WriteLine("  busytag-cli show COM3 photo.png");
+    Console.WriteLine("  busytag-cli storage COM3");
+    Console.WriteLine("  busytag-cli delete COM3 old_image.png");
+    Console.WriteLine("  busytag-cli firmware COM3 \"firmware_v2.1.bin\"");
+    Console.WriteLine("  busytag-cli format COM3 --force");
     Console.WriteLine();
     Console.WriteLine("Run without arguments for interactive mode.");
 }
