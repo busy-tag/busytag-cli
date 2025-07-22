@@ -8,22 +8,50 @@
         <AssemblyName>busytag-cli</AssemblyName>
         <RootNamespace>BusyTag.CLI</RootNamespace>
 
+        <!-- .NET Tool Configuration -->
+        <PackAsTool>true</PackAsTool>
+        <ToolCommandName>busytag-cli</ToolCommandName>
+        <PackageOutputPath>./nupkg</PackageOutputPath>
+
         <!-- Package Information -->
         <PackageId>BusyTag.CLI</PackageId>
         <Version>0.1.0</Version>
         <Authors>BUSY TAG SIA</Authors>
         <Company>BUSY TAG SIA</Company>
         <Product>BusyTag CLI</Product>
-        <Description>Command-line interface for BusyTag device management</Description>
+        <Description>Command-line interface for BusyTag device management. Control your BusyTag displays, upload files, manage storage, update firmware, and more.</Description>
         <Copyright>Copyright © 2025 BUSY TAG SIA</Copyright>
+        <PackageProjectUrl>https://github.com/busy-tag/busytag-cli</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/busy-tag/busytag-cli.git</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageTags>busytag;cli;device-management;serial;hardware;iot</PackageTags>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageIcon>icon.png</PackageIcon>
+        <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 
-        <!-- Enable single file publishing -->
-        <PublishSingleFile>true</PublishSingleFile>
-        <SelfContained>true</SelfContained>
-        <RuntimeIdentifier Condition="$([MSBuild]::IsOSPlatform('Windows'))">win-x64</RuntimeIdentifier>
-        <RuntimeIdentifier Condition="$([MSBuild]::IsOSPlatform('OSX'))">osx-x64</RuntimeIdentifier>
-        <RuntimeIdentifier Condition="$([MSBuild]::IsOSPlatform('Linux'))">linux-x64</RuntimeIdentifier>
+        <!-- Runtime Configuration for Tool -->
+        <UseAppHost>true</UseAppHost>
+        <PublishSingleFile>false</PublishSingleFile>
+        <SelfContained>false</SelfContained>
+
+        <!-- Release Information -->
+        <PackageReleaseNotes>
+            Initial release of BusyTag CLI tool.
+            Features:
+            - Device discovery and connection
+            - Display control (colors, patterns, brightness)
+            - File management (upload, download, delete)
+            - Storage operations and monitoring
+            - Firmware update capabilities
+            - Interactive and command-line modes
+        </PackageReleaseNotes>
     </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="README.md" Pack="true" PackagePath="\" />
+        <None Include="icon.png" Pack="true" PackagePath="\" Condition="Exists('icon.png')" />
+    </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="BusyTag.Lib" Version="0.2.3" />
