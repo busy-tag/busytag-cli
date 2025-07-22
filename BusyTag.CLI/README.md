@@ -554,6 +554,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - 📊 Interactive mode with progress tracking
 - 🌍 Cross-platform support (Windows, macOS, Linux)
 
+### Version 0.2.0
+- 🔧 Little command fixation
+
 ### Version 0.1.0
 - 🎉 Initial beta release
 - 🔌 Basic device connection and control
