@@ -38,7 +38,7 @@ A comprehensive command-line interface for managing BusyTag devices. Control you
 
 ### From Source
 ```bash
-git clone [repository-url]
+git clone https://github.com/busy-tag/busytag-cli.git
 cd BusyTag.CLI
 dotnet build -c Release
 dotnet publish -c Release --self-contained -r win-x64    # Windows
