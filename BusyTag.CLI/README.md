@@ -1,49 +1,62 @@
-﻿# BusyTag CLI - Device Manager Command Line Interface
+﻿# BusyTag.CLI - Technical Documentation
 
-[![.NET Tool](https://img.shields.io/nuget/v/BusyTag.CLI?label=.NET%20Tool&color=blue)](https://www.nuget.org/packages/BusyTag.CLI)
-[![.NET](https://img.shields.io/badge/.NET-8.0+-blue.svg)](https://dotnet.microsoft.com/)
-[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)](https://github.com/dotnet/core)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Downloads](https://img.shields.io/nuget/dt/BusyTag.CLI?color=green)](https://www.nuget.org/packages/BusyTag.CLI)
-
-A comprehensive command-line interface for managing BusyTag devices. Control your BusyTag displays, upload files, manage storage, update firmware, and more - all from the command line or through an interactive interface.
+This directory contains the BusyTag CLI application source code and comprehensive technical documentation.
 
 ## 📋 Table of Contents
 
-- [Features](#-features)
-- [Installation](#-installation)
-- [Quick Start](#-quick-start)
-- [Usage Modes](#-usage-modes)
-- [Commands Reference](#-commands-reference)
-- [Examples & Use Cases](#-examples--use-cases)
-- [File Format Support](#-file-format-support)
+- [Project Structure](#-project-structure)
+- [Installation Methods](#-installation-methods)
+- [Complete Command Reference](#-complete-command-reference)
 - [Advanced Usage](#-advanced-usage)
-- [Configuration](#-configuration)
-- [Troubleshooting](#-troubleshooting)
-- [Contributing](#-contributing)
+- [Development](#-development)
+- [API Reference](#-api-reference)
 
-## ✨ Features
+## 📁 Project Structure
 
-- **🔍 Device Discovery & Connection** - Automatically find and connect to BusyTag devices
-- **🎨 Display Control** - Set colors, patterns, brightness, and display images
-- **📁 File Management** - Upload, download, delete, and list files on device storage
-- **💾 Storage Operations** - Monitor storage usage and format device storage
-- **🔧 Firmware Updates** - Upload and install firmware updates with progress tracking
-- **⚡ Interactive & Command-Line Modes** - Use as needed for automation or manual operation
-- **📊 Real-time Monitoring** - Progress bars, status updates, and event tracking
-- **🌍 Cross-Platform** - Works on Windows, macOS, and Linux
+```
+BusyTag.CLI/
+├── Program.cs              # Main application entry point
+├── BusyTag.CLI.csproj      # Project configuration
+└── README.md               # This file
+```
 
-## 🚀 Installation
+## 🚀 Installation Methods
 
-### Prerequisites
-- **.NET 8.0 Runtime** or later
-- **BusyTag device** with USB/Serial connection
-- **Operating System**: Windows, macOS, or Linux
+### Method 1: Homebrew (macOS - Recommended)
 
-### Method 1: .NET Global Tool (Recommended)
-Install as a global tool using the .NET CLI:
+Install using Homebrew for the easiest setup on macOS:
 
 ```bash
+# Add the BusyTag tap
+brew tap busy-tag/busytag
+
+# Install BusyTag CLI
+brew install busytag-cli
+
+# Verify installation
+busytag-cli --version
+
+# Update to latest version
+brew update && brew upgrade busytag-cli
+
+# Uninstall if needed
+brew uninstall busytag-cli
+```
+
+**✅ Advantages:**
+- **No .NET runtime required** - Self-contained executable
+- **Automatic updates** - Homebrew keeps it current
+- **Native performance** - Optimized for your Mac architecture
+- **Easy management** - Standard Homebrew commands
+
+### Method 2: .NET Global Tool (Cross-Platform)
+
+Install as a global tool using the .NET CLI (requires .NET 8.0+ runtime):
+
+```bash
+# Install .NET 8.0+ first if not already installed
+# Download from: https://dotnet.microsoft.com/download
+
 # Install the latest version
 dotnet tool install -g BusyTag.CLI
 
@@ -57,13 +70,14 @@ dotnet tool update -g BusyTag.CLI
 dotnet tool uninstall -g BusyTag.CLI
 ```
 
-### Method 2: From Source
+### Method 3: From Source
+
 For development or building from source:
 
 ```bash
 # Clone the repository
 git clone https://github.com/busy-tag/busytag-cli.git
-cd busytag-cli
+cd busytag-cli/BusyTag.CLI
 
 # Build and run
 dotnet build -c Release
@@ -71,91 +85,43 @@ dotnet run -- --help
 
 # Or build self-contained executable
 dotnet publish -c Release --self-contained -r win-x64    # Windows
-dotnet publish -c Release --self-contained -r osx-x64    # macOS
+dotnet publish -c Release --self-contained -r osx-x64    # macOS Intel
+dotnet publish -c Release --self-contained -r osx-arm64  # macOS Apple Silicon
 dotnet publish -c Release --self-contained -r linux-x64  # Linux
 ```
 
-### Method 3: Download Binary Release
-Download pre-built binaries from the [Releases](https://github.com/busy-tag/busytag-cli/releases) page.
+## 📖 Complete Command Reference
 
-## 🎯 Quick Start
+### Device Management Commands
 
-### 1. Install the Tool
+#### Device Discovery
 ```bash
-dotnet tool install -g BusyTag.CLI
+busytag-cli scan                              # Scan for devices
+busytag-cli list                              # Alias for scan
 ```
 
-### 2. Find Your Device
+#### Connection Management
 ```bash
-busytag-cli scan
-# Output: Found 1 device(s): COM3
+busytag-cli connect <port>                    # Connect to specific device
+busytag-cli info <port>                       # Show device information
+busytag-cli restart <port>                    # Restart device remotely
 ```
 
-### 3. Connect and Check Status
-```bash
-busytag-cli info COM3
-```
+### Display Control Commands
 
-### 4. Set Display Color
-```bash
-busytag-cli color COM3 blue 75
-```
-
-### 5. Upload and Display an Image
-```bash
-busytag-cli upload COM3 "my-image.png"
-busytag-cli show COM3 "my-image.png"
-```
-
-## 🖥️ Usage Modes
-
-### Interactive Mode
-Run without arguments to enter an interactive menu-driven interface:
-```bash
-busytag-cli
-```
-
-**Features:**
-- 🔄 Automatic device discovery every 3 seconds
-- 📊 Real-time progress indicators
-- 🛡️ Safe operation confirmations
-- 📈 Detailed storage analysis
-- 🎛️ Guided workflows for complex operations
-
-### Command-Line Mode
-Execute specific commands for automation and scripting:
-```bash
-busytag-cli <command> [arguments]
-```
-
-Perfect for:
-- 🤖 Automation scripts
-- 📋 Batch operations
-- 🔗 CI/CD integration
-- ⏰ Scheduled tasks
-
-## 📖 Commands Reference
-
-### Device Management
-
-| Command | Description | Example |
-|---------|-------------|---------|
-| `scan` / `list` | Discover connected devices | `busytag-cli scan` |
-| `connect <port>` | Connect to specific device | `busytag-cli connect COM3` |
-| `info <port>` | Show device information | `busytag-cli info COM3` |
-| `restart <port>` | Restart device remotely | `busytag-cli restart COM3` |
-
-### Display Control
-
-#### Set Colors
+#### Color Control
 ```bash
 busytag-cli color <port> <color> [brightness] [led_bits]
 ```
 
 **Color Formats:**
-- **Named:** `red`, `green`, `blue`, `yellow`, `cyan`, `magenta`, `white`, `off`
-- **Hex:** `FF0000`, `#FF0000`
-- **RGB:** `255,0,0`
+- **Named colors:** `red`, `green`, `blue`, `yellow`, `cyan`, `magenta`, `white`, `off`
+- **Hex colors:** `FF0000`, `#FF0000`
+- **RGB values:** `255,0,0`
+
+**Parameters:**
+- `brightness`: 0-100 (default: 100)
+- `led_bits`: 1-127 (default: 127, controls which LEDs to light)
 
 **Examples:**
 ```bash
@@ -163,424 +129,486 @@ busytag-cli color COM3 red                    # Full red
 busytag-cli color COM3 red 75                 # Red at 75% brightness
 busytag-cli color COM3 FF0000 50 127          # Hex red, 50% brightness, all LEDs
 busytag-cli color COM3 255,128,0              # Orange using RGB
+busytag-cli color COM3 blue 100 64            # Blue on specific LED pattern
 ```
 
-#### Other Display Commands
+#### Brightness Control
 ```bash
 busytag-cli brightness <port> <level>         # Set brightness (0-100)
-busytag-cli pattern <port> <pattern_name>     # Apply LED pattern
-busytag-cli show <port> <filename>            # Display image file
 ```
 
-### File Management
+#### Pattern Control
+```bash
+busytag-cli pattern <port> <pattern_name>     # Apply LED pattern
+```
 
-| Command | Description | Example |
-|---------|-------------|---------|
-| `upload <port> <file>` | Upload file to device | `busytag-cli upload COM3 "photo.png"` |
-| `download <port> <file> <dest>` | Download from device | `busytag-cli download COM3 photo.png ./` |
-| `delete <port> <file>` | Delete file from device | `busytag-cli delete COM3 old.png` |
-| `files <port>` / `ls <port>` | List device files | `busytag-cli files COM3` |
+**Available patterns:**
+- `rainbow`
+- `pulse`
+- `strobe`
+- `fade`
+- `custom` (user-defined)
+
+#### Image Display
+```bash
+busytag-cli show <port> <filename>            # Display image file
+busytag-cli display <port> <filename>         # Alias for show
+```
+
+### File Management Commands
+
+#### Upload Operations
+```bash
+busytag-cli upload <port> <file_path>         # Upload file to device
+```
+
+**Supported formats:**
+- **Images:** PNG, GIF (240x280px)
+- **Firmware:** .bin files
+- **Maximum filename length:** 40 characters
+
+#### Download Operations
+```bash
+busytag-cli download <port> <filename> <destination_path>
+```
+
+#### File Listing
+```bash
+busytag-cli files <port>                      # List all files
+busytag-cli ls <port>                         # Alias for files
+```
+
+#### File Deletion
+```bash
+busytag-cli delete <port> <filename>          # Delete specific file
+busytag-cli remove <port> <filename>          # Alias for delete
+```
 
 ### Storage Operations
 
+#### Storage Information
 ```bash
-busytag-cli storage <port>                    # Show storage info
-busytag-cli format <port> --force             # Format storage (⚠️ DESTRUCTIVE)
+busytag-cli storage <port>                    # Show storage statistics
+busytag-cli space <port>                      # Alias for storage
+```
+
+#### Storage Management
+```bash
+busytag-cli format <port> --force             # Format device storage (DESTRUCTIVE!)
 ```
 
 ### Firmware Management
 
+#### Firmware Upload
 ```bash
-busytag-cli firmware <port> <firmware.bin>    # Upload firmware (⚠️ CAUTION)
+busytag-cli firmware <port> <firmware.bin>    # Upload firmware update
 ```
 
-### Information
+**⚠️ Important Notes:**
+- Only use firmware files specifically designed for your device
+- Ensure a stable power supply during update
+- Do not disconnect device during firmware update
+- Keep backup firmware files for recovery
+
+### Information Commands
 
 ```bash
-busytag-cli version                           # Show version
-busytag-cli help                              # Show help
+busytag-cli version                           # Show CLI version
+busytag-cli --version                         # Alternative version command
+busytag-cli -v                                # Short version command
+busytag-cli help                              # Show help information
+busytag-cli --help                            # Alternative help command
+busytag-cli -h                                # Short help command
 ```
-
-## 🌟 Examples & Use Cases
-
-### Basic Device Setup
-```bash
-# Quick device check and setup
-busytag-cli scan
-busytag-cli info COM3
-busytag-cli color COM3 green 80
-```
-
-### Image Management Workflow
-```bash
-# Check storage space
-busytag-cli storage COM3
-
-# Upload multiple images
-busytag-cli upload COM3 "logo.png"
-busytag-cli upload COM3 "background.gif"
-
-# List all files
-busytag-cli files COM3
-
-# Display specific image
-busytag-cli show COM3 logo.png
-
-# Clean up old files
-busytag-cli delete COM3 old_logo.png
-```
-
-### Automation Scripts
-
-#### PowerShell: Batch Upload
-```powershell
-$port = "COM3"
-$imageDir = "C:\DisplayImages\"
-
-Get-ChildItem $imageDir -Include "*.png","*.gif" | ForEach-Object {
-    & busytag-cli upload $port $_.FullName
-    Write-Host "✅ Uploaded: $($_.Name)"
-}
-
-# Set first image as display
-$firstImage = (Get-ChildItem $imageDir -Include "*.png","*.gif")[0]
-& busytag-cli show $port $firstImage.Name
-```
-
-#### Bash: System Status Display
-```bash
-#!/bin/bash
-PORT="/dev/ttyUSB0"
-
-# Get CPU usage
-CPU_USAGE=$(top -bn1 | grep "Cpu(s)" | awk '{print $2}' | cut -d'%' -f1)
-
-# Set color based on CPU usage
-if (( $(echo "$CPU_USAGE < 30" | bc -l) )); then
-    busytag-cli color $PORT green 50
-elif (( $(echo "$CPU_USAGE < 70" | bc -l) )); then
-    busytag-cli color $PORT yellow 75
-else
-    busytag-cli color $PORT red 100
-fi
-```
-
-#### Python: Weather Display Integration
-```python
-import subprocess
-import requests
-import time
-
-def update_weather_display(port="COM3", api_key="your_api_key"):
-    """Update BusyTag display based on weather conditions"""
-    
-    # Get weather data
-    response = requests.get(f"http://api.openweathermap.org/data/2.5/weather?q=YourCity&appid={api_key}")
-    weather = response.json()
-    
-    # Map weather to colors
-    weather_colors = {
-        "clear": "yellow",
-        "clouds": "white", 
-        "rain": "blue",
-        "snow": "cyan",
-        "thunderstorm": "purple"
-    }
-    
-    condition = weather["weather"][0]["main"].lower()
-    color = weather_colors.get(condition, "white")
-    
-    # Update display
-    subprocess.run(["busytag-cli", "color", port, color, "75"])
-    print(f"🌤️  Display updated for {condition} weather")
-
-# Run every hour
-while True:
-    update_weather_display()
-    time.sleep(3600)
-```
-
-#### Docker Integration
-```dockerfile
-# Dockerfile for automated BusyTag control
-FROM mcr.microsoft.com/dotnet/runtime:8.0
-
-# Install BusyTag CLI
-RUN dotnet tool install -g BusyTag.CLI
-
-# Add to PATH
-ENV PATH="$PATH:/root/.dotnet/tools"
-
-# Your automation script
-COPY automation-script.sh /app/
-RUN chmod +x /app/automation-script.sh
-
-CMD ["/app/automation-script.sh"]
-```
-
-### Maintenance Operations
-```bash
-# Backup all files
-mkdir device_backup
-busytag-cli files COM3 | grep -E "\.(png|gif)" | while read file; do
-    busytag-cli download COM3 "$file" device_backup/
-done
-
-# System maintenance
-busytag-cli storage COM3                      # Check storage
-busytag-cli firmware COM3 latest.bin         # Update firmware
-busytag-cli restart COM3                      # Restart device
-```
-
-## 📁 File Format Support
-
-### Images
-- **PNG** (recommended) - Best compression and quality
-- **GIF** - Supports animation
-
-### Firmware
-- **Binary files (.bin)** - Device firmware updates
-- **Maximum filename length:** 40 characters
-
-### Best Practices
-- ✅ Optimize PNG files for better storage efficiency
-- ✅ Check available storage before large uploads
-- ✅ Use descriptive but short filenames
-- ✅ Keep firmware files backed up separately
 
 ## 🔧 Advanced Usage
 
+### Interactive Mode
+
+Launch interactive mode for guided operations:
+
+```bash
+busytag-cli
+```
+
+**Interactive Mode Features:**
+- 🔄 Automatic device discovery every 3 seconds
+- 📊 Real-time progress indicators with detailed statistics
+- 🛡️ Safe operation confirmations for destructive actions
+- 📈 Detailed storage analysis and file management
+- 🎛️ Guided workflows for complex operations
+- 📋 Device health monitoring and diagnostics
+
 ### Environment Configuration
+
+Set environment variables for default behavior:
+
 ```bash
 # Windows
 set BUSYTAG_DEFAULT_PORT=COM3
 set BUSYTAG_TIMEOUT=5000
 set BUSYTAG_SCAN_INTERVAL=3000
+set BUSYTAG_DEBUG=1
 
-# Linux/macOS  
-export BUSYTAG_DEFAULT_PORT="/dev/ttyUSB0"
+# macOS/Linux  
+export BUSYTAG_DEFAULT_PORT="/dev/cu.usbserial-xyz"  # macOS
+# export BUSYTAG_DEFAULT_PORT="/dev/ttyUSB0"         # Linux
 export BUSYTAG_TIMEOUT=5000
 export BUSYTAG_SCAN_INTERVAL=3000
+export BUSYTAG_DEBUG=1
 ```
 
-### CI/CD Integration Example
-```yaml
-# GitHub Actions example
-name: Update BusyTag Display
-on:
-  push:
-    branches: [main]
-    
-jobs:
-  update-display:
-    runs-on: self-hosted  # Requires runner with device access
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
-      - name: Install BusyTag CLI
-        run: dotnet tool install -g BusyTag.CLI
-      - name: Update display for successful build
-        run: |
-          busytag-cli scan
-          busytag-cli color ${{ env.BUSYTAG_PORT }} green 75
-          busytag-cli upload ${{ env.BUSYTAG_PORT }} assets/success-logo.png
-          busytag-cli show ${{ env.BUSYTAG_PORT }} success-logo.png
-```
+## 🛠️ Development
 
-### Health Monitoring Script
+### Building from Source
+
+#### Prerequisites
+- .NET 8.0 SDK or later
+- Git
+
+#### Build Commands
 ```bash
-#!/bin/bash
-# Device health monitoring
+# Clone repository
+git clone https://github.com/busy-tag/busytag-cli.git
+cd busytag-cli/BusyTag.CLI
 
-PORT="COM3"
-LOG="/var/log/busytag.log"
+# Restore dependencies
+dotnet restore
 
-check_device_health() {
-    echo "$(date): Checking device health..." >> $LOG
-    
-    if busytag-cli info $PORT > /dev/null 2>&1; then
-        # Device online - check storage
-        USAGE=$(busytag-cli storage $PORT | grep "Usage:" | awk '{print $2}' | tr -d '%')
-        echo "$(date): Device online, storage: ${USAGE}%" >> $LOG
-        
-        # Alert if storage > 90%
-        if [ "$USAGE" -gt 90 ]; then
-            echo "$(date): ⚠️  WARNING - Storage nearly full!" >> $LOG
-            busytag-cli color $PORT red 100  # Visual alert
-        fi
-    else
-        echo "$(date): ❌ ERROR - Device offline" >> $LOG
-    fi
+# Build in Debug mode
+dotnet build
+
+# Build in Release mode
+dotnet build -c Release
+
+# Run tests
+dotnet test
+
+# Run the application
+dotnet run -- <arguments>
+```
+
+#### Publishing
+
+Create platform-specific executables:
+
+```bash
+# Windows x64
+dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
+
+# macOS x64 (Intel)
+dotnet publish -c Release -r osx-x64 --self-contained true -p:PublishSingleFile=true
+
+# macOS ARM64 (Apple Silicon)
+dotnet publish -c Release -r osx-arm64 --self-contained true -p:PublishSingleFile=true
+
+# Linux x64
+dotnet publish -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true
+```
+
+#### Development Configuration
+
+Create a `appsettings.Development.json` file for development settings:
+
+```json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Debug",
+      "BusyTag": "Trace"
+    }
+  },
+  "BusyTag": {
+    "DefaultTimeout": 10000,
+    "ScanInterval": 2000,
+    "MaxRetries": 3
+  }
 }
-
-# Run every 5 minutes
-while true; do
-    check_device_health
-    sleep 300
-done
 ```
 
-## ⚙️ Configuration
+### Project Dependencies
 
-### Performance Tuning
-- **Connection timeout:** Increase for slow connections
-- **Scan interval:** Adjust for device discovery frequency
-- **Batch size:** Group operations to reduce overhead
+The project uses the following key dependencies:
 
-### Security Settings
-- **Firmware verification:** Always verify firmware sources
-- **File scanning:** Scan uploads for malware
-- **Access control:** Limit device access in multi-user environments
+- **BusyTag.Lib** (v0.2.3+) - Core device communication library
+- **.NET 8.0** - Runtime framework
+- **System.IO.Ports** - Serial port communication
+- **Microsoft.Extensions.Logging** - Logging framework
 
-## 🔧 Troubleshooting
+### Error Codes Reference
 
-### Common Issues
+| Exit Code | Description | Common Causes |
+|-----------|-------------|---------------|
+| 0 | Success | Operation completed successfully |
+| 1 | General error | Invalid arguments, connection failure |
+| 2 | Device not found | No device detected, wrong port |
+| 3 | Permission denied | Insufficient permissions, driver issues |
+| 4 | File operation failed | File not found, storage full |
+| 5 | Communication timeout | Device not responding, cable issues |
+| 6 | Invalid format | Unsupported file format |
+| 7 | Device busy | Another operation in progress |
 
-#### 🔍 Device Not Found
+## 📚 API Reference
+
+### Core Classes
+
+#### BusyTagDevice
+Main device interface class providing all device operations.
+
+**Key Methods:**
+- `Connect()` - Establish device connection
+- `Disconnect()` - Close device connection
+- `SendRgbColorAsync(r, g, b, ledBits)` - Set RGB color
+- `SetSolidColorAsync(colorName, brightness, ledBits)` - Set named color
+- `SendNewFile(filePath)` - Upload file to device
+- `GetFileListAsync()` - Retrieve device file list
+- `DeleteFile(filename)` - Delete file from device
+- `GetFileAsync(filename)` - Download file from device
+- `ShowPictureAsync(filename)` - Display image file
+- `FormatDiskAsync()` - Format device storage
+- `RestartDeviceAsync()` - Restart device
+
+#### BusyTagManager
+Device discovery and management class.
+
+**Key Methods:**
+- `FindBusyTagDevice()` - Scan for available devices
+- `StartPeriodicDeviceSearch(interval)` - Auto-discovery
+- `StopPeriodicDeviceSearch()` - Stop auto-discovery
+
+### Configuration Options
+
+The application supports various configuration options through environment variables and command-line arguments:
+
 ```bash
-# Check all possible ports
-busytag-cli scan
-
-# Test specific ports
-busytag-cli info COM1
-busytag-cli info COM2
-busytag-cli info /dev/ttyUSB0
-busytag-cli info /dev/ttyACM0
-```
-
-**Solutions:**
-- ✅ Check USB cable connection
-- ✅ Verify device drivers are installed
-- ✅ Try different USB ports
-- ✅ Check device manager (Windows) or `lsusb` (Linux)
-
-#### ⏱️ Connection Timeout
-```bash
-# Check if device is responding
-busytag-cli info <port>
-
-# Try restarting device
-busytag-cli restart <port>
-```
-
-**Solutions:**
-- ✅ Increase timeout in environment variables
-- ✅ Check for device conflicts
-- ✅ Restart device and retry
-- ✅ Update device drivers
-
-#### 💾 Upload Failures
-```bash
-# Check available storage first
-busytag-cli storage <port>
-
-# Verify file exists and check size
-ls -la <filename>
-```
-
-**Solutions:**
-- ✅ Free up storage space
-- ✅ Verify file path and permissions
-- ✅ Check filename length (max 40 chars)
-- ✅ Ensure stable connection during upload
-
-#### 🔧 Firmware Update Issues
-```bash
-# Verify file format
-file firmware.bin
-
-# Check device info before update
-busytag-cli info <port>
-```
-
-**Solutions:**
-- ✅ Use only compatible .bin files
-- ✅ Ensure stable power supply
-- ✅ Don't disconnect during update
-- ✅ Have recovery firmware ready
-
-#### 🛠️ Tool Installation Issues
-```bash
-# Check if .NET is installed
-dotnet --version
-
-# Clear tool cache and reinstall
-dotnet tool uninstall -g BusyTag.CLI
-dotnet nuget locals all --clear
-dotnet tool install -g BusyTag.CLI
-
-# Check tool path
-echo $PATH | grep -o '[^:]*\.dotnet[^:]*'
-```
-
-### Error Codes
-
-| Error | Description | Solution |
-|-------|-------------|----------|
-| **Connection Error** | Device not responding | Check connection and drivers |
-| **File Not Found** | Missing file | Verify file path and existence |
-| **Storage Full** | Insufficient space | Delete files or format storage |
-| **Invalid Format** | Unsupported file | Use PNG/GIF for images, .bin for firmware |
-| **Timeout** | Operation took too long | Increase timeout or check connection |
-| **Device Busy** | Another operation in progress | Wait or restart device |
-| **Tool Not Found** | CLI not in PATH | Reinstall tool or check PATH |
-
-### Debug Mode
-```bash
-# Enable verbose logging (if supported)
-BUSYTAG_DEBUG=1 busytag-cli info COM3
-
-# Check system logs
-# Windows: Event Viewer
-# Linux: journalctl -u busytag
-# macOS: Console.app
+# Environment Variables
+BUSYTAG_DEFAULT_PORT       # Default device port
+BUSYTAG_TIMEOUT           # Connection timeout (ms)
+BUSYTAG_SCAN_INTERVAL     # Device scan interval (ms)
+BUSYTAG_DEBUG             # Enable debug logging (1/0)
+BUSYTAG_MAX_RETRIES       # Maximum retry attempts
+BUSYTAG_LOG_LEVEL         # Logging level (Debug/Info/Warning/Error)
 ```
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See the main repository LICENSE file for details.
 
-## 📈 Changelog
+## 📈 Version History
 
-### Version 1.0.0
-- 🎉 Initial stable release
-- 🔌 Full device connection and control
-- 📁 Complete file management functionality
-- 🎨 Advanced color and brightness control
-- 🔧 Firmware update capabilities
-- 📊 Interactive mode with progress tracking
-- 🌍 Cross-platform support (Windows, macOS, Linux)
+### Latest Versions
+- **v0.3.4+** - Homebrew support, automated releases, native executables
+- **v0.2.0** - Command improvements and bug fixes
+- **v0.1.0** - Initial release with core functionality
 
-### Version 0.2.0
-- 🔧 Little command fixation
+## 🎯 Performance Optimization
 
-### Version 0.1.0
-- 🎉 Initial beta release
-- 🔌 Basic device connection and control
-- 📁 File upload/download functionality
-- 🎨 Color and brightness control
+### Best Practices
 
-## 🔗 Links
+#### File Operations
+```bash
+# Check available space before large uploads
+busytag-cli storage COM3
 
-- **GitHub Repository**: [https://github.com/busy-tag/busytag-cli](https://github.com/busy-tag/busytag-cli)
-- **NuGet Package**: [https://www.nuget.org/packages/BusyTag.CLI](https://www.nuget.org/packages/BusyTag.CLI)
-- **Issues & Support**: [https://github.com/busy-tag/busytag-cli/issues](https://github.com/busy-tag/busytag-cli/issues)
-- **BusyTag Hardware**: [Contact BUSY TAG SIA for device information]
+# Use appropriate file formats
+# PNG: Best for static images, smaller file sizes
+# GIF: Required for animations, larger file sizes
 
-## 🎯 Roadmap
+# Optimize images before upload
+# Use tools like pngquant, imageoptim, or tinypng
+```
 
-- 🔄 **Auto-update mechanism** for CLI tool
-- 🎨 **Custom pattern editor** in interactive mode
-- 📱 **Mobile device support** via Bluetooth
-- 🌐 **Web dashboard** for remote management
-- 🔌 **Plugin system** for extended functionality
-- 📊 **Analytics and monitoring** dashboard
+#### Batch Operations
+```bash
+# Group related operations to reduce connection overhead
+# Good:
+busytag-cli upload COM3 file1.png
+busytag-cli upload COM3 file2.png
+busytag-cli show COM3 file1.png
+
+# Better: Use scripts that maintain connection state
+# (Interactive mode handles this automatically)
+```
+
+#### Connection Management
+```bash
+# For automation, use environment variables to reduce setup time
+export BUSYTAG_DEFAULT_PORT="COM3"
+export BUSYTAG_TIMEOUT="10000"
+
+# Then commands don't need port specification
+busytag-cli color red 75
+busytag-cli upload image.png
+```
+
+### Memory and Resource Usage
+
+The CLI application is designed to be lightweight:
+
+- **Memory footprint:** ~10-50MB depending on operation
+- **CPU usage:** Minimal during normal operations
+- **Network usage:** None (local device communication only)
+- **Storage:** Self-contained executable ~20-60MB depending on platform
+
+## 🔐 Security Considerations
+
+### Device Access
+- CLI requires direct access to serial/USB ports
+- On Linux, user must be in `dialout` group
+- On macOS/Windows, admin privileges may be required for driver installation
+
+### File Handling
+- Always validate file paths and names before upload
+- Be cautious with firmware files - only use trusted sources
+- Consider scanning uploaded files for malware in shared environments
+
+### Automation Security
+```bash
+# Use absolute paths in automation scripts
+busytag-cli upload COM3 "/full/path/to/file.png"
+
+# Validate inputs in scripts
+if [[ -f "$UPLOAD_FILE" ]]; then
+    busytag-cli upload "$PORT" "$UPLOAD_FILE"
+else
+    echo "Error: File not found: $UPLOAD_FILE"
+    exit 1
+fi
+
+# Set appropriate file permissions
+chmod 600 /path/to/automation-script.sh
+```
+## 🌐 Internationalization
+
+The CLI currently supports English output. For international users:
+
+### Date and Time Formats
+- Uses ISO 8601 format for timestamps
+- UTC timezone for logs and operations
+
+### Number Formats
+- Uses decimal points for floating-point numbers
+- Byte sizes in binary format (1024-based)
+
+### Error Messages
+- All error messages are in English
+- Error codes are language-independent
+
+## 📊 Monitoring and Observability
+
+### Logging Configuration
+
+Configure logging levels and outputs:
+
+```json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "BusyTag.CLI": "Debug",
+      "BusyTag.Lib": "Information"
+    },
+    "Console": {
+      "IncludeScopes": true
+    },
+    "File": {
+      "Path": "/var/log/busytag-cli.log",
+      "MaxFileSize": "10MB",
+      "MaxRollingFiles": 5
+    }
+  }
+}
+```
+
+### Metrics and Analytics
+
+For automation and monitoring, the CLI provides:
+
+- **Exit codes** for programmatic success/failure detection
+- **Structured output** options for parsing
+- **Progress indicators** for long-running operations
+- **Timing information** for performance monitoring
+
+```bash
+# Example: Monitoring script performance
+start_time=$(date +%s)
+busytag-cli upload COM3 large-file.png
+end_time=$(date +%s)
+duration=$((end_time - start_time))
+echo "Upload took ${duration} seconds"
+```
+
+## 🔄 Migration and Upgrade Guide
+
+### Upgrading from v0.1.x to v0.2.x+
+
+1. **Update installation:**
+   ```bash
+   # For Homebrew users
+   brew update && brew upgrade busytag-cli
+   
+   # For .NET tool users
+   dotnet tool update -g BusyTag.CLI
+   ```
+
+2. **Check for breaking changes:**
+    - Command syntax remains the same
+    - New features available (check changelog)
+    - Environment variable names unchanged
+
+3. **Update automation scripts:**
+    - Test all automation scripts with new version
+    - Update any hardcoded version checks
+    - Take advantage of new features
+
+### Backup and Recovery
+
+Before major updates:
+
+```bash
+# Backup current configuration
+cp ~/.busytag/config.json ~/.busytag/config.json.backup
+
+# Backup automation scripts
+tar -czf busytag-scripts-backup.tar.gz /path/to/scripts/
+
+# Test new version in isolation
+busytag-cli --version
+busytag-cli help
+```
+
+## 📞 Support and Community
+
+### Getting Help
+
+1. **Documentation**: Check this comprehensive guide first
+2. **GitHub Issues**: [Create an issue](https://github.com/busy-tag/busytag-cli/issues) for bugs or feature requests
+3. **Discussions**: Use GitHub Discussions for questions and community support
+
+### Reporting Bugs
+
+When reporting bugs, include:
+
+```bash
+# System information
+busytag-cli --version
+uname -a                    # Linux/macOS
+systeminfo                 # Windows
+
+# Device information
+busytag-cli scan
+busytag-cli info <port>
+
+# Error logs (if available)
+cat /var/log/busytag-cli.log
+
+# Steps to reproduce
+# Expected vs actual behavior
+# Screenshots or terminal output
+```
 
 ---
 
 **Made with ❤️ by BUSY TAG SIA**
 
-For support, please check the [troubleshooting section](#-troubleshooting) or [open an issue](https://github.com/busy-tag/busytag-cli/issues) on GitHub.
+For questions or support, please [open an issue](https://github.com/busy-tag/busytag-cli/issues) or check our [documentation](https://busytag.com/docs).
