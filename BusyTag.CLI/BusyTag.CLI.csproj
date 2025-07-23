@@ -10,49 +10,34 @@
 
         <!-- Package Information -->
         <PackageId>BusyTag.CLI</PackageId>
-        <Version>0.3.4</Version>
+        <Version>0.3.5</Version>
         <Authors>BUSY TAG SIA</Authors>
         <Company>BUSY TAG SIA</Company>
         <Product>BusyTag CLI</Product>
         <Description>Command-line interface for BusyTag device management. Control your BusyTag displays, upload files, manage storage, update firmware, and more.</Description>
         <Copyright>Copyright © 2025 BUSY TAG SIA</Copyright>
+        
+        <!-- URLs and Metadata -->
         <PackageProjectUrl>https://github.com/busy-tag/busytag-cli</PackageProjectUrl>
         <RepositoryUrl>https://github.com/busy-tag/busytag-cli.git</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
-        <PackageTags>busytag;cli;device-management;serial;hardware;iot</PackageTags>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageIcon>icon.png</PackageIcon>
         <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 
-        <!-- Release Information -->
-        <PackageReleaseNotes>
-            Initial release of BusyTag CLI tool.
-            Features:
-            - Device discovery and connection
-            - Display control (colors, patterns, brightness)
-            - File management (upload, download, delete)
-            - Storage operations and monitoring
-            - Firmware update capabilities
-            - Interactive and command-line modes
-        </PackageReleaseNotes>
+        <!-- Tags for discoverability -->
+        <PackageTags>busytag;cli;device-management;serial;hardware;iot</PackageTags>
+
+        <!-- Release notes (will be updated by automation) -->
+        <PackageReleaseNotes>Latest release with new features and improvements.</PackageReleaseNotes>
     </PropertyGroup>
 
-    <!-- .NET Tool Configuration (only when building as tool) -->
+    <!-- .NET Tool Configuration -->
     <PropertyGroup Condition="'$(BuildForTool)' == 'true'">
         <PackAsTool>true</PackAsTool>
         <ToolCommandName>busytag-cli</ToolCommandName>
         <PackageOutputPath>./nupkg</PackageOutputPath>
-        <UseAppHost>true</UseAppHost>
-        <PublishSingleFile>false</PublishSingleFile>
-        <SelfContained>false</SelfContained>
-    </PropertyGroup>
-
-    <!-- Homebrew/Self-Contained Configuration (default) -->
-    <PropertyGroup Condition="'$(BuildForTool)' != 'true'">
-        <UseAppHost>true</UseAppHost>
-        <PublishSingleFile Condition="'$(PublishSingleFile)' == ''">true</PublishSingleFile>
-        <SelfContained Condition="'$(SelfContained)' == ''">true</SelfContained>
     </PropertyGroup>
 
     <ItemGroup>
