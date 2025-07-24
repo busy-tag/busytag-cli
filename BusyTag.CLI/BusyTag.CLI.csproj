@@ -10,7 +10,7 @@
 
         <!-- Package Information -->
         <PackageId>BusyTag.CLI</PackageId>
-        <Version>0.3.6</Version>
+        <Version>0.4.0</Version>
         <Authors>BUSY TAG SIA</Authors>
         <Company>BUSY TAG SIA</Company>
         <Product>BusyTag CLI</Product>
@@ -45,8 +45,12 @@
         <None Include="icon.png" Pack="true" PackagePath="\" Condition="Exists('icon.png')" />
     </ItemGroup>
 
+<!--    <ItemGroup>-->
+<!--        <ProjectReference Include="..\busytag-lib\BusyTag.Lib.csproj" />-->
+<!--    </ItemGroup>-->
+
     <ItemGroup>
-        <PackageReference Include="BusyTag.Lib" Version="0.2.3" />
+      <PackageReference Include="BusyTag.Lib" Version="0.5.0" />
     </ItemGroup>
 
 </Project>
