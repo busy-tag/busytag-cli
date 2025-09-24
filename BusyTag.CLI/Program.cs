@@ -12,11 +12,11 @@ class Program
     private static List<string>? _lastFoundDevices = null;
     private static DateTime _lastDeviceMessage = DateTime.MinValue;
 
-    static async Task Main(string[] args)
+    private static async Task Main(string[] args)
     {
         Console.WriteLine("BusyTag Device Manager CLI");
         Console.WriteLine("==========================");
-        
+
         // Handle command line arguments
         if (args.Length > 0)
         {
@@ -28,668 +28,732 @@ class Program
         await RunInteractiveMode();
     }
 
-    static async Task HandleCommandLineArgs(string[] args)
-{
-    string command = args[0].ToLower();
-    
-    switch (command)
+    private static async Task HandleCommandLineArgs(string[] args)
     {
-        case "list":
-        case "scan":
-            await ScanForDevices();
-            break;
-            
-        case "connect":
-            if (args.Length > 1)
-            {
-                await ConnectToDevice(args[1]);
-            }
-            else
-            {
-                Console.WriteLine("Usage: busytag-cli connect <port_name>");
-            }
-            break;
-            
-        case "info":
-            if (args.Length > 1)
-            {
-                await ShowDeviceInfo(args[1]);
-            }
-            else
-            {
-                Console.WriteLine("Usage: busytag-cli info <port_name>");
-            }
-            break;
-            
-        case "color":
-        case "setcolor":
-            await HandleColorCommand(args);
-            break;
-            
-        case "brightness":
-        case "bright":
-            await HandleBrightnessCommand(args);
-            break;
-            
-        case "upload":
-            await HandleUploadCommand(args);
-            break;
-            
-        case "download":
-            await HandleDownloadCommand(args);
-            break;
-            
-        case "delete":
-        case "remove":
-            await HandleDeleteCommand(args);
-            break;
-            
-        case "files":
-        case "ls":
-            await HandleFilesCommand(args);
-            break;
-            
-        case "show":
-        case "display":
-            await HandleShowImageCommand(args);
-            break;
-            
-        case "pattern":
-            await HandlePatternCommand(args);
-            break;
-            
-        case "storage":
-        case "space":
-            await HandleStorageCommand(args);
-            break;
-            
-        case "firmware":
-            await HandleFirmwareCommand(args);
-            break;
-            
-        case "format":
-            await HandleFormatCommand(args);
-            break;
-            
-        case "restart":
-        case "reboot":
-            await HandleRestartCommand(args);
-            break;
-            
-        case "version":
-        case "--version":
-        case "-v":
-            ShowVersion();
-            break;
-            
-        case "help":
-        case "--help":
-        case "-h":
-            ShowHelp();
-            break;
-            
-        default:
-            Console.WriteLine($"Unknown command: {command}");
-            ShowHelp();
-            break;
-    }
-}
+        string command = args[0].ToLower();
 
-static async Task HandleColorCommand(string[] args)
-{
-    if (args.Length < 3)
-    {
-        Console.WriteLine("Usage: busytag-cli color <port> <color> [brightness] [led_bits]");
-        Console.WriteLine("Examples:");
-        Console.WriteLine("  BusyTag color COM3 red");
-        Console.WriteLine("  BusyTag color COM3 FF0000 50");
-        Console.WriteLine("  BusyTag color COM3 255,0,0 75 127");
-        return;
-    }
-
-    string port = args[1];
-    string color = args[2];
-    int brightness = args.Length > 3 && int.TryParse(args[3], out int b) ? Math.Clamp(b, 0, 100) : 100;
-    int ledBits = args.Length > 4 && int.TryParse(args[4], out int l) ? Math.Clamp(l, 1, 127) : 127;
-
-    var device = new BusyTagDevice(port);
-    try
-    {
-        await device.Connect();
-        if (!device.IsConnected)
+        switch (command)
         {
-            Console.WriteLine($"Failed to connect to {port}");
+            case "list":
+            case "scan":
+                await ScanForDevices();
+                break;
+
+            case "connect":
+                if (args.Length > 1)
+                {
+                    await ConnectToDevice(args[1]);
+                }
+                else
+                {
+                    Console.WriteLine("Usage: busytag-cli connect <port_name>");
+                }
+
+                break;
+
+            case "info":
+                if (args.Length > 1)
+                {
+                    await ShowDeviceInfo(args[1]);
+                }
+                else
+                {
+                    Console.WriteLine("Usage: busytag-cli info <port_name>");
+                }
+
+                break;
+
+            case "color":
+            case "setcolor":
+                await HandleColorCommand(args);
+                break;
+
+            case "brightness":
+            case "bright":
+                await HandleBrightnessCommand(args);
+                break;
+
+            case "upload":
+                await HandleUploadCommand(args);
+                break;
+
+            case "download":
+                await HandleDownloadCommand(args);
+                break;
+
+            case "delete":
+            case "remove":
+                await HandleDeleteCommand(args);
+                break;
+
+            case "files":
+            case "ls":
+                await HandleFilesCommand(args);
+                break;
+
+            case "show":
+            case "display":
+                await HandleShowImageCommand(args);
+                break;
+
+            case "pattern":
+                await HandlePatternCommand(args);
+                break;
+
+            case "storage":
+            case "space":
+                await HandleStorageCommand(args);
+                break;
+
+            case "firmware":
+                await HandleFirmwareCommand(args);
+                break;
+
+            case "format":
+                await HandleFormatCommand(args);
+                break;
+
+            case "restart":
+            case "reboot":
+                await HandleRestartCommand(args);
+                break;
+
+            case "version":
+            case "--version":
+            case "-v":
+                ShowVersion();
+                break;
+
+            case "help":
+            case "--help":
+            case "-h":
+                ShowHelp();
+                break;
+
+            default:
+                Console.WriteLine($"Unknown command: {command}");
+                ShowHelp();
+                break;
+        }
+    }
+
+    private static async Task HandleColorCommand(string[] args)
+    {
+        if (args.Length < 3)
+        {
+            Console.WriteLine("Usage: busytag-cli color <port> <color> [brightness] [led_bits]");
+            Console.WriteLine("Examples:");
+            Console.WriteLine("  BusyTag color COM3 red");
+            Console.WriteLine("  BusyTag color COM3 FF0000 50");
+            Console.WriteLine("  BusyTag color COM3 255,0,0 75 127");
             return;
         }
 
-        bool success = false;
+        string port = args[1];
+        string color = args[2];
+        int brightness = args.Length > 3 && int.TryParse(args[3], out int b) ? Math.Clamp(b, 0, 100) : 100;
+        int ledBits = args.Length > 4 && int.TryParse(args[4], out int l) ? Math.Clamp(l, 1, 127) : 127;
 
-        // Check if it's the RGB format
-        if (color.Contains(','))
+        var device = new BusyTagDevice(port);
+        try
         {
-            var rgbParts = color.Split(',');
-            if (rgbParts.Length == 3 && 
-                int.TryParse(rgbParts[0].Trim(), out int r) &&
-                int.TryParse(rgbParts[1].Trim(), out int g) &&
-                int.TryParse(rgbParts[2].Trim(), out int bb))
+            await device.Connect();
+            if (!device.IsConnected)
             {
+                Console.WriteLine($"Failed to connect to {port}");
+                return;
+            }
+
+            bool success = false;
+
+            // Check if it's the RGB format
+            if (color.Contains(','))
+            {
+                var rgbParts = color.Split(',');
+                if (rgbParts.Length == 3 &&
+                    int.TryParse(rgbParts[0].Trim(), out int r) &&
+                    int.TryParse(rgbParts[1].Trim(), out int g) &&
+                    int.TryParse(rgbParts[2].Trim(), out int bb))
+                {
+                    r = (int)(r * brightness / 100.0);
+                    g = (int)(g * brightness / 100.0);
+                    bb = (int)(bb * brightness / 100.0);
+                    success = await device.SendRgbColorAsync(r, g, bb, ledBits);
+                }
+            }
+            // Check if it's a hex format
+            else if (color.Replace("#", "").Length == 6 && IsValidHex(color.Replace("#", "")))
+            {
+                var hexColor = color.Replace("#", "").ToUpper();
+                var r = Convert.ToInt32(hexColor.Substring(0, 2), 16);
+                var g = Convert.ToInt32(hexColor.Substring(2, 2), 16);
+                var bb = Convert.ToInt32(hexColor.Substring(4, 2), 16);
+
                 r = (int)(r * brightness / 100.0);
                 g = (int)(g * brightness / 100.0);
                 bb = (int)(bb * brightness / 100.0);
+
                 success = await device.SendRgbColorAsync(r, g, bb, ledBits);
             }
-        }
-        // Check if it's a hex format
-        else if (color.Replace("#", "").Length == 6 && IsValidHex(color.Replace("#", "")))
-        {
-            var hexColor = color.Replace("#", "").ToUpper();
-            var r = Convert.ToInt32(hexColor.Substring(0, 2), 16);
-            var g = Convert.ToInt32(hexColor.Substring(2, 2), 16);
-            var bb = Convert.ToInt32(hexColor.Substring(4, 2), 16);
-            
-            r = (int)(r * brightness / 100.0);
-            g = (int)(g * brightness / 100.0);
-            bb = (int)(bb * brightness / 100.0);
-            
-            success = await device.SendRgbColorAsync(r, g, bb, ledBits);
-        }
-        // Otherwise treat as a color name
-        else
-        {
-            success = await device.SetSolidColorAsync(color.ToLower(), brightness, ledBits);
-        }
-
-        Console.WriteLine(success ? "Color set successfully!" : "Failed to set color.");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error: {ex.Message}");
-    }
-    finally
-    {
-        device.Disconnect();
-    }
-}
-
-static async Task HandleBrightnessCommand(string[] args)
-{
-    if (args.Length < 3)
-    {
-        Console.WriteLine("Usage: busytag-cli brightness <port> <level>");
-        Console.WriteLine("  level: 0-100");
-        Console.WriteLine("Example: busytag-cli brightness COM3 75");
-        return;
-    }
-
-    string port = args[1];
-    if (!int.TryParse(args[2], out int brightness) || brightness < 0 || brightness > 100)
-    {
-        Console.WriteLine("Brightness must be between 0 and 100");
-        return;
-    }
-
-    var device = new BusyTagDevice(port);
-    try
-    {
-        await device.Connect();
-        if (!device.IsConnected)
-        {
-            Console.WriteLine($"Failed to connect to {port}");
-            return;
-        }
-
-        var success = await device.SetDisplayBrightnessAsync(brightness);
-        Console.WriteLine(success ? $"Brightness set to {brightness}%" : "Failed to set brightness");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error: {ex.Message}");
-    }
-    finally
-    {
-        device.Disconnect();
-    }
-}
-
-static async Task HandleUploadCommand(string[] args)
-{
-    if (args.Length < 3)
-    {
-        Console.WriteLine("Usage: busytag-cli upload <port> <file_path>");
-        Console.WriteLine("Example: busytag-cli upload COM3 \"C:\\images\\photo.png\"");
-        return;
-    }
-
-    string port = args[1];
-    string filePath = string.Join(" ", args.Skip(2)).Trim('"', '\'');
-
-    if (!File.Exists(filePath))
-    {
-        Console.WriteLine($"File not found: {filePath}");
-        return;
-    }
-
-    var device = new BusyTagDevice(port);
-    try
-    {
-        await device.Connect();
-        if (!device.IsConnected)
-        {
-            Console.WriteLine($"Failed to connect to {port}");
-            return;
-        }
-
-        var fileInfo = new FileInfo(filePath);
-        Console.WriteLine($"Uploading {fileInfo.Name} ({GetHumanReadableSize(fileInfo.Length)})...");
-
-        await device.SendNewFile(filePath);
-        Console.WriteLine("Upload completed!");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Upload failed: {ex.Message}");
-    }
-    finally
-    {
-        device.Disconnect();
-    }
-}
-
-static async Task HandleDownloadCommand(string[] args)
-{
-    if (args.Length < 4)
-    {
-        Console.WriteLine("Usage: busytag-cli download <port> <filename> <destination_path>");
-        Console.WriteLine("Example: busytag-cli download COM3 photo.png \"C:\\downloads\\\"");
-        return;
-    }
-
-    string port = args[1];
-    string filename = args[2];
-    string destPath = string.Join(" ", args.Skip(3)).Trim('"', '\'');
-
-    var device = new BusyTagDevice(port);
-    try
-    {
-        await device.Connect();
-        if (!device.IsConnected)
-        {
-            Console.WriteLine($"Failed to connect to {port}");
-            return;
-        }
-
-        Console.WriteLine($"Downloading {filename}...");
-        var result = await device.GetFileAsync(filename);
-        
-        if (!string.IsNullOrEmpty(result))
-        {
-            var fullPath = Path.Combine(destPath, filename);
-            File.Copy(result, fullPath, true);
-            Console.WriteLine($"Downloaded to: {fullPath}");
-        }
-        else
-        {
-            Console.WriteLine("Download failed!");
-        }
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Download failed: {ex.Message}");
-    }
-    finally
-    {
-        device.Disconnect();
-    }
-}
-
-static async Task HandleDeleteCommand(string[] args)
-{
-    if (args.Length < 3)
-    {
-        Console.WriteLine("Usage: busytag-cli delete <port> <filename>");
-        Console.WriteLine("Example: busytag-cli delete COM3 photo.png");
-        return;
-    }
-
-    string port = args[1];
-    string filename = args[2];
-
-    var device = new BusyTagDevice(port);
-    try
-    {
-        await device.Connect();
-        if (!device.IsConnected)
-        {
-            Console.WriteLine($"Failed to connect to {port}");
-            return;
-        }
-
-        Console.WriteLine($"Deleting {filename}...");
-        var success = await device.DeleteFile(filename);
-        Console.WriteLine(success ? "File deleted successfully!" : "Failed to delete file");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Delete failed: {ex.Message}");
-    }
-    finally
-    {
-        device.Disconnect();
-    }
-}
-
-static async Task HandleFilesCommand(string[] args)
-{
-    if (args.Length < 2)
-    {
-        Console.WriteLine("Usage: busytag-cli files <port>");
-        Console.WriteLine("Example: busytag-cli files COM3");
-        return;
-    }
-
-    string port = args[1];
-    var device = new BusyTagDevice(port);
-    try
-    {
-        await device.Connect();
-        if (!device.IsConnected)
-        {
-            Console.WriteLine($"Failed to connect to {port}");
-            return;
-        }
-
-        var files = await device.GetFileListAsync();
-        if (files.Count == 0)
-        {
-            Console.WriteLine("No files found on device.");
-        }
-        else
-        {
-            Console.WriteLine($"Files on device ({files.Count}):");
-            foreach (var file in files.OrderByDescending(f => f.Size))
+            // Otherwise treat as a color name
+            else
             {
-                var indicator = file.Name == device.CurrentImageName ? " (current)" : "";
-                var fileType = IsImageFile(file.Name) ? "[IMG]" : "[FILE]";
-                Console.WriteLine($"  {fileType} {file.Name} - {GetHumanReadableSize(file.Size)}{indicator}");
+                success = await device.SetSolidColorAsync(color.ToLower(), brightness, ledBits);
+            }
+
+            Console.WriteLine(success ? "Color set successfully!" : "Failed to set color.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            device.Disconnect();
+        }
+    }
+
+    private static async Task HandleBrightnessCommand(string[] args)
+    {
+        if (args.Length < 3)
+        {
+            Console.WriteLine("Usage: busytag-cli brightness <port> <level>");
+            Console.WriteLine("  level: 0-100");
+            Console.WriteLine("Example: busytag-cli brightness COM3 75");
+            return;
+        }
+
+        string port = args[1];
+        if (!int.TryParse(args[2], out int brightness) || brightness < 0 || brightness > 100)
+        {
+            Console.WriteLine("Brightness must be between 0 and 100");
+            return;
+        }
+
+        var device = new BusyTagDevice(port);
+        try
+        {
+            await device.Connect();
+            if (!device.IsConnected)
+            {
+                Console.WriteLine($"Failed to connect to {port}");
+                return;
+            }
+
+            var success = await device.SetDisplayBrightnessAsync(brightness);
+            Console.WriteLine(success ? $"Brightness set to {brightness}%" : "Failed to set brightness");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            device.Disconnect();
+        }
+    }
+
+    private static async Task HandleUploadCommand(string[] args)
+    {
+        if (args.Length < 3)
+        {
+            Console.WriteLine("Usage: busytag-cli upload <port> <file_path>");
+            Console.WriteLine("Example: busytag-cli upload COM3 \"C:\\images\\photo.png\"");
+            return;
+        }
+
+        string port = args[1];
+        string filePath = string.Join(" ", args.Skip(2)).Trim('"', '\'');
+
+        if (!File.Exists(filePath))
+        {
+            Console.WriteLine($"File not found: {filePath}");
+            return;
+        }
+
+        var device = new BusyTagDevice(port);
+        try
+        {
+            await device.Connect();
+            if (!device.IsConnected)
+            {
+                Console.WriteLine($"Failed to connect to {port}");
+                return;
+            }
+
+            var fileInfo = new FileInfo(filePath);
+            Console.WriteLine($"Uploading {fileInfo.Name} ({GetHumanReadableSize(fileInfo.Length)})...");
+
+            await device.SendNewFile(filePath);
+            Console.WriteLine("Upload completed!");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Upload failed: {ex.Message}");
+        }
+        finally
+        {
+            device.Disconnect();
+        }
+    }
+
+    private static async Task HandleDownloadCommand(string[] args)
+    {
+        if (args.Length < 4)
+        {
+            Console.WriteLine("Usage: busytag-cli download <port> <filename> <destination_path>");
+            Console.WriteLine("Example: busytag-cli download COM3 photo.png \"C:\\downloads\\\"");
+            return;
+        }
+
+        string port = args[1];
+        string filename = args[2];
+        string destPath = string.Join(" ", args.Skip(3)).Trim('"', '\'');
+
+        var device = new BusyTagDevice(port);
+        try
+        {
+            await device.Connect();
+            if (!device.IsConnected)
+            {
+                Console.WriteLine($"Failed to connect to {port}");
+                return;
+            }
+
+            Console.WriteLine($"Downloading {filename}...");
+            var result = await device.GetFileAsync(filename);
+
+            if (!string.IsNullOrEmpty(result))
+            {
+                var fullPath = Path.Combine(destPath, filename);
+                File.Copy(result, fullPath, true);
+                Console.WriteLine($"Downloaded to: {fullPath}");
+            }
+            else
+            {
+                Console.WriteLine("Download failed!");
             }
         }
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error: {ex.Message}");
-    }
-    finally
-    {
-        device.Disconnect();
-    }
-}
-
-static async Task HandleShowImageCommand(string[] args)
-{
-    if (args.Length < 3)
-    {
-        Console.WriteLine("Usage: busytag-cli show <port> <filename>");
-        Console.WriteLine("Example: busytag-cli show COM3 photo.png");
-        return;
-    }
-
-    string port = args[1];
-    string filename = args[2];
-
-    var device = new BusyTagDevice(port);
-    try
-    {
-        await device.Connect();
-        if (!device.IsConnected)
+        catch (Exception ex)
         {
-            Console.WriteLine($"Failed to connect to {port}");
+            Console.WriteLine($"Download failed: {ex.Message}");
+        }
+        finally
+        {
+            device.Disconnect();
+        }
+    }
+
+    private static async Task HandleDeleteCommand(string[] args)
+    {
+        if (args.Length < 3)
+        {
+            Console.WriteLine("Usage: busytag-cli delete <port> <filename>");
+            Console.WriteLine("Example: busytag-cli delete COM3 photo.png");
             return;
         }
 
-        var success = await device.ShowPictureAsync(filename);
-        Console.WriteLine(success ? $"Now displaying: {filename}" : "Failed to display image");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error: {ex.Message}");
-    }
-    finally
-    {
-        device.Disconnect();
-    }
-}
+        string port = args[1];
+        string filename = args[2];
 
-static async Task HandlePatternCommand(string[] args)
-{
-    if (args.Length < 3)
-    {
-        Console.WriteLine("Usage: busytag-cli pattern <port> <pattern_name>");
-        Console.WriteLine("Available patterns:");
-        var patterns = PatternListCommands.PatternList;
-        foreach (var pattern in patterns.Values)
+        var device = new BusyTagDevice(port);
+        try
         {
-            Console.WriteLine($"  {pattern?.Name}");
+            await device.Connect();
+            if (!device.IsConnected)
+            {
+                Console.WriteLine($"Failed to connect to {port}");
+                return;
+            }
+
+            Console.WriteLine($"Deleting {filename}...");
+            var success = await device.DeleteFile(filename);
+            Console.WriteLine(success ? "File deleted successfully!" : "Failed to delete file");
         }
-        return;
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Delete failed: {ex.Message}");
+        }
+        finally
+        {
+            device.Disconnect();
+        }
     }
 
-    string port = args[1];
-    string patternName = string.Join(" ", args.Skip(2));
-
-    var device = new BusyTagDevice(port);
-    try
+    private static async Task HandleFilesCommand(string[] args)
     {
-        await device.Connect();
-        if (!device.IsConnected)
+        if (args.Length < 2)
         {
-            Console.WriteLine($"Failed to connect to {port}");
+            Console.WriteLine("Usage: busytag-cli files <port>");
+            Console.WriteLine("Example: busytag-cli files COM3");
             return;
         }
 
-        var patterns = PatternListCommands.PatternList;
-        var pattern = patterns.Values.FirstOrDefault(p => 
-            p?.Name?.Equals(patternName, StringComparison.OrdinalIgnoreCase) == true);
-
-        if (pattern != null)
+        string port = args[1];
+        var device = new BusyTagDevice(port);
+        try
         {
-            var success = await device.SetNewCustomPattern(pattern.PatternLines, true, false);
-            Console.WriteLine(success ? $"Pattern '{pattern.Name}' set successfully!" : "Failed to set pattern");
+            await device.Connect();
+            if (!device.IsConnected)
+            {
+                Console.WriteLine($"Failed to connect to {port}");
+                return;
+            }
+
+            var files = await device.GetFileListAsync();
+            if (files.Count == 0)
+            {
+                Console.WriteLine("No files found on device.");
+            }
+            else
+            {
+                Console.WriteLine($"Files on device ({files.Count}):");
+                foreach (var file in files.OrderByDescending(f => f.Size))
+                {
+                    var indicator = file.Name == device.CurrentImageName ? " (current)" : "";
+                    var fileType = IsImageFile(file.Name) ? "[IMG]" : "[FILE]";
+                    Console.WriteLine($"  {fileType} {file.Name} - {GetHumanReadableSize(file.Size)}{indicator}");
+                }
+            }
         }
-        else
+        catch (Exception ex)
         {
-            Console.WriteLine($"Pattern '{patternName}' not found");
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            device.Disconnect();
         }
     }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error: {ex.Message}");
-    }
-    finally
-    {
-        device.Disconnect();
-    }
-}
 
-static async Task HandleStorageCommand(string[] args)
-{
-    if (args.Length < 2)
+    private static async Task HandleShowImageCommand(string[] args)
     {
-        Console.WriteLine("Usage: busytag-cli storage <port>");
-        Console.WriteLine("Example: busytag-cli storage COM3");
-        return;
-    }
-
-    string port = args[1];
-    var device = new BusyTagDevice(port);
-    try
-    {
-        await device.Connect();
-        if (!device.IsConnected)
+        if (args.Length < 3)
         {
-            Console.WriteLine($"Failed to connect to {port}");
+            Console.WriteLine("Usage: busytag-cli show <port> <filename>");
+            Console.WriteLine("Example: busytag-cli show COM3 photo.png");
             return;
         }
 
-        await device.GetFreeStorageSizeAsync();
-        await device.GetTotalStorageSizeAsync();
-        var files = await device.GetFileListAsync();
+        string port = args[1];
+        string filename = args[2];
 
-        Console.WriteLine("Storage Information:");
-        Console.WriteLine($"  Total: {GetHumanReadableSize(device.TotalStorageSize)}");
-        Console.WriteLine($"  Free: {GetHumanReadableSize(device.FreeStorageSize)}");
-        Console.WriteLine($"  Used: {GetHumanReadableSize(device.TotalStorageSize - device.FreeStorageSize)}");
-        
-        var usage = device.TotalStorageSize > 0 ? 
-            (double)(device.TotalStorageSize - device.FreeStorageSize) / device.TotalStorageSize * 100 : 0;
-        Console.WriteLine($"  Usage: {usage:F1}%");
-        Console.WriteLine($"  Files: {files.Count}");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error: {ex.Message}");
-    }
-    finally
-    {
-        device.Disconnect();
-    }
-}
-
-static async Task HandleFirmwareCommand(string[] args)
-{
-    if (args.Length < 3)
-    {
-        Console.WriteLine("Usage: busytag-cli firmware <port> <firmware_file.bin>");
-        Console.WriteLine("Example: busytag-cli firmware COM3 \"firmware_v2.1.bin\"");
-        return;
-    }
-
-    string port = args[1];
-    string firmwarePath = string.Join(" ", args.Skip(2)).Trim('"', '\'');
-
-    if (!File.Exists(firmwarePath))
-    {
-        Console.WriteLine($"Firmware file not found: {firmwarePath}");
-        return;
-    }
-
-    if (!firmwarePath.EndsWith(".bin", StringComparison.OrdinalIgnoreCase))
-    {
-        Console.WriteLine("Only .bin files are supported for firmware updates");
-        return;
-    }
-
-    var device = new BusyTagDevice(port);
-    try
-    {
-        await device.Connect();
-        if (!device.IsConnected)
+        var device = new BusyTagDevice(port);
+        try
         {
-            Console.WriteLine($"Failed to connect to {port}");
+            await device.Connect();
+            if (!device.IsConnected)
+            {
+                Console.WriteLine($"Failed to connect to {port}");
+                return;
+            }
+
+            var success = await device.ShowPictureAsync(filename);
+            Console.WriteLine(success ? $"Now displaying: {filename}" : "Failed to display image");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            device.Disconnect();
+        }
+    }
+
+    private static async Task HandlePatternCommand(string[] args)
+    {
+        if (args.Length < 3)
+        {
+            Console.WriteLine("Usage: busytag-cli pattern <port> <pattern_name_or_number> [count]");
+            Console.WriteLine("  count: 1-254 (play count times), 255 (infinite), default=1");
+            Console.WriteLine("Available patterns:");
+            var patterns = PatternListCommands.PatternList;
+            int index = 1;
+            foreach (var pattern in patterns.Values)
+            {
+                Console.WriteLine($"  {index}. {pattern?.Name}");
+                index++;
+            }
+
             return;
         }
 
-        Console.WriteLine($"WARNING: Firmware update can brick your device!");
-        Console.WriteLine($"Uploading firmware: {Path.GetFileName(firmwarePath)}");
-        
-        await device.SendNewFile(firmwarePath);
-        await device.ActivateFileStorageScanAsync();
-        
-        Console.WriteLine("Firmware upload completed. Device will process the update.");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Firmware update failed: {ex.Message}");
-    }
-    finally
-    {
-        device.Disconnect();
-    }
-}
+        string port = args[1];
+        string patternIdentifier = args[2];
+        int count = 1; // Default count
 
-static async Task HandleFormatCommand(string[] args)
-{
-    if (args.Length < 2)
-    {
-        Console.WriteLine("Usage: busytag-cli format <port> [--force]");
-        Console.WriteLine("Example: busytag-cli format COM3 --force");
-        Console.WriteLine("WARNING: This will delete ALL data on the device!");
-        return;
-    }
-
-    string port = args[1];
-    bool force = args.Length > 2 && args[2] == "--force";
-
-    if (!force)
-    {
-        Console.WriteLine("DANGER: This will permanently delete ALL data on the device!");
-        Console.WriteLine("Use --force flag to confirm: BusyTag format <port> --force");
-        return;
-    }
-
-    var device = new BusyTagDevice(port);
-    try
-    {
-        await device.Connect();
-        if (!device.IsConnected)
+        // Parse count parameter if provided
+        if (args.Length > 3)
         {
-            Console.WriteLine($"Failed to connect to {port}");
+            if (int.TryParse(args[3], out int parsedCount) && parsedCount >= 1 && parsedCount <= 255)
+            {
+                count = parsedCount;
+            }
+            else
+            {
+                Console.WriteLine("Invalid count. Must be between 1 and 255 (255 = infinite)");
+                return;
+            }
+        }
+
+        var device = new BusyTagDevice(port);
+        try
+        {
+            await device.Connect();
+            if (!device.IsConnected)
+            {
+                Console.WriteLine($"Failed to connect to {port}");
+                return;
+            }
+
+            var patterns = PatternListCommands.PatternList;
+            var patternList = patterns.Values.Where(p => p != null).ToList();
+
+            // Try to find a pattern by number first
+            if (int.TryParse(patternIdentifier, out int patternNumber) && patternNumber > 0 &&
+                patternNumber <= patternList.Count)
+            {
+                var pattern = patternList[patternNumber - 1];
+                var success = await device.SetNewCustomPattern(pattern.PatternLines, true, false);
+                if (success && count != 1)
+                {
+                    _ = device.PlayPatternAsync(true, count);
+                    // Note: Count functionality requires firmware support or repeated pattern calls
+                    // For now, we'll document the count but use the standard pattern call
+                    var countText = count == 255 ? "infinite" : count.ToString();
+                    Console.WriteLine(
+                        $"Pattern '{pattern.Name}' set successfully! Note: Count {countText} requested (requires firmware support)");
+                }
+                else
+                {
+                    Console.WriteLine(success
+                        ? $"Pattern '{pattern.Name}' set successfully!"
+                        : "Failed to set pattern");
+                }
+            }
+            else
+            {
+                // Try to find a pattern by name
+                var pattern = patterns.Values.FirstOrDefault(p =>
+                    p?.Name?.Equals(patternIdentifier, StringComparison.OrdinalIgnoreCase) == true);
+
+                if (pattern != null)
+                {
+                    var success = await device.SetNewCustomPattern(pattern.PatternLines, true, false);
+                    if (success && count != 1)
+                    {
+                        _ = device.PlayPatternAsync(true, count);
+                        // Note: Count functionality requires firmware support or repeated pattern calls
+                        // For now, we'll document the count but use the standard pattern call
+                        var countText = count == 255 ? "infinite" : count.ToString();
+                        Console.WriteLine(
+                            $"Pattern '{pattern.Name}' set successfully! Note: Count {countText} requested (requires firmware support)");
+                    }
+                    else
+                    {
+                        Console.WriteLine(success
+                            ? $"Pattern '{pattern.Name}' set successfully!"
+                            : "Failed to set pattern");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"Pattern '{patternIdentifier}' not found");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            device.Disconnect();
+        }
+    }
+
+    private static async Task HandleStorageCommand(string[] args)
+    {
+        if (args.Length < 2)
+        {
+            Console.WriteLine("Usage: busytag-cli storage <port>");
+            Console.WriteLine("Example: busytag-cli storage COM3");
             return;
         }
 
-        Console.WriteLine("Formatting device storage...");
-        var success = await device.FormatDiskAsync();
-        Console.WriteLine(success ? "Format completed successfully!" : "Format failed!");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Format failed: {ex.Message}");
-    }
-    finally
-    {
-        device.Disconnect();
-    }
-}
-
-static async Task HandleRestartCommand(string[] args)
-{
-    if (args.Length < 2)
-    {
-        Console.WriteLine("Usage: busytag-cli restart <port>");
-        Console.WriteLine("Example: busytag-cli restart COM3");
-        return;
-    }
-
-    string port = args[1];
-    var device = new BusyTagDevice(port);
-    try
-    {
-        await device.Connect();
-        if (!device.IsConnected)
+        string port = args[1];
+        var device = new BusyTagDevice(port);
+        try
         {
-            Console.WriteLine($"Failed to connect to {port}");
+            await device.Connect();
+            if (!device.IsConnected)
+            {
+                Console.WriteLine($"Failed to connect to {port}");
+                return;
+            }
+
+            await device.GetFreeStorageSizeAsync();
+            await device.GetTotalStorageSizeAsync();
+            var files = await device.GetFileListAsync();
+
+            Console.WriteLine("Storage Information:");
+            Console.WriteLine($"  Total: {GetHumanReadableSize(device.TotalStorageSize)}");
+            Console.WriteLine($"  Free: {GetHumanReadableSize(device.FreeStorageSize)}");
+            Console.WriteLine($"  Used: {GetHumanReadableSize(device.TotalStorageSize - device.FreeStorageSize)}");
+
+            var usage = device.TotalStorageSize > 0
+                ? (double)(device.TotalStorageSize - device.FreeStorageSize) / device.TotalStorageSize * 100
+                : 0;
+            Console.WriteLine($"  Usage: {usage:F1}%");
+            Console.WriteLine($"  Files: {files.Count}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            device.Disconnect();
+        }
+    }
+
+    private static async Task HandleFirmwareCommand(string[] args)
+    {
+        if (args.Length < 3)
+        {
+            Console.WriteLine("Usage: busytag-cli firmware <port> <firmware_file.bin>");
+            Console.WriteLine("Example: busytag-cli firmware COM3 \"firmware_v2.1.bin\"");
             return;
         }
 
-        Console.WriteLine("Restarting device...");
-        var success = await device.RestartDeviceAsync();
-        Console.WriteLine(success ? "Restart command sent successfully!" : "Failed to restart device");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Restart failed: {ex.Message}");
-    }
-    finally
-    {
-        device.Disconnect();
-    }
-}
+        string port = args[1];
+        string firmwarePath = string.Join(" ", args.Skip(2)).Trim('"', '\'');
 
-static void ShowVersion()
-{
-    var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-    Console.WriteLine($"BusyTag CLI v{version}");
-    Console.WriteLine("BusyTag Device Manager Command Line Interface");
-}
+        if (!File.Exists(firmwarePath))
+        {
+            Console.WriteLine($"Firmware file not found: {firmwarePath}");
+            return;
+        }
+
+        if (!firmwarePath.EndsWith(".bin", StringComparison.OrdinalIgnoreCase))
+        {
+            Console.WriteLine("Only .bin files are supported for firmware updates");
+            return;
+        }
+
+        var device = new BusyTagDevice(port);
+        try
+        {
+            await device.Connect();
+            if (!device.IsConnected)
+            {
+                Console.WriteLine($"Failed to connect to {port}");
+                return;
+            }
+
+            Console.WriteLine($"WARNING: Firmware update can brick your device!");
+            Console.WriteLine($"Uploading firmware: {Path.GetFileName(firmwarePath)}");
+
+            await device.SendNewFile(firmwarePath);
+            await device.ActivateFileStorageScanAsync();
+
+            Console.WriteLine("Firmware upload completed. Device will process the update.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Firmware update failed: {ex.Message}");
+        }
+        finally
+        {
+            device.Disconnect();
+        }
+    }
+
+    private static async Task HandleFormatCommand(string[] args)
+    {
+        if (args.Length < 2)
+        {
+            Console.WriteLine("Usage: busytag-cli format <port> [--force]");
+            Console.WriteLine("Example: busytag-cli format COM3 --force");
+            Console.WriteLine("WARNING: This will delete ALL data on the device!");
+            return;
+        }
+
+        string port = args[1];
+        bool force = args.Length > 2 && args[2] == "--force";
+
+        if (!force)
+        {
+            Console.WriteLine("DANGER: This will permanently delete ALL data on the device!");
+            Console.WriteLine("Use --force flag to confirm: BusyTag format <port> --force");
+            return;
+        }
+
+        var device = new BusyTagDevice(port);
+        try
+        {
+            await device.Connect();
+            if (!device.IsConnected)
+            {
+                Console.WriteLine($"Failed to connect to {port}");
+                return;
+            }
+
+            Console.WriteLine("Formatting device storage...");
+            var success = await device.FormatDiskAsync();
+            Console.WriteLine(success ? "Format completed successfully!" : "Format failed!");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Format failed: {ex.Message}");
+        }
+        finally
+        {
+            device.Disconnect();
+        }
+    }
+
+    private static async Task HandleRestartCommand(string[] args)
+    {
+        if (args.Length < 2)
+        {
+            Console.WriteLine("Usage: busytag-cli restart <port>");
+            Console.WriteLine("Example: busytag-cli restart COM3");
+            return;
+        }
+
+        string port = args[1];
+        var device = new BusyTagDevice(port);
+        try
+        {
+            await device.Connect();
+            if (!device.IsConnected)
+            {
+                Console.WriteLine($"Failed to connect to {port}");
+                return;
+            }
+
+            Console.WriteLine("Restarting device...");
+            var success = await device.RestartDeviceAsync();
+            Console.WriteLine(success ? "Restart command sent successfully!" : "Failed to restart device");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Restart failed: {ex.Message}");
+        }
+        finally
+        {
+            device.Disconnect();
+        }
+    }
+
+    static void ShowVersion()
+    {
+        var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+        Console.WriteLine($"BusyTag CLI v{version}");
+        Console.WriteLine("BusyTag Device Manager Command Line Interface");
+    }
 
     static async Task ScanDeviceStorage()
     {
@@ -703,52 +767,56 @@ static void ShowVersion()
         {
             Console.WriteLine("[INFO] Scanning device storage...");
             var scanStartTime = DateTime.Now;
-            
+
             // Get storage information
             await _currentDevice.GetFreeStorageSizeAsync();
             await _currentDevice.GetTotalStorageSizeAsync();
             var files = await _currentDevice.GetFileListAsync();
-            
+
             var scanTime = DateTime.Now - scanStartTime;
-            
+
             Console.WriteLine("\n[STORAGE] Device Storage Information:");
             Console.WriteLine($"   Total space: {GetHumanReadableSize(_currentDevice.TotalStorageSize)}");
             Console.WriteLine($"   Free space: {GetHumanReadableSize(_currentDevice.FreeStorageSize)}");
-            Console.WriteLine($"   Used space: {GetHumanReadableSize(_currentDevice.TotalStorageSize - _currentDevice.FreeStorageSize)}");
-            
-            var usagePercentage = _currentDevice.TotalStorageSize > 0 ? 
-                (double)(_currentDevice.TotalStorageSize - _currentDevice.FreeStorageSize) / _currentDevice.TotalStorageSize * 100 : 0;
+            Console.WriteLine(
+                $"   Used space: {GetHumanReadableSize(_currentDevice.TotalStorageSize - _currentDevice.FreeStorageSize)}");
+
+            var usagePercentage = _currentDevice.TotalStorageSize > 0
+                ? (double)(_currentDevice.TotalStorageSize - _currentDevice.FreeStorageSize) /
+                _currentDevice.TotalStorageSize * 100
+                : 0;
             Console.WriteLine($"   Usage: {usagePercentage:F1}%");
             Console.WriteLine($"   Files count: {files.Count}");
             Console.WriteLine($"   Scan time: {FormatTimeSpanWithMs(scanTime)}");
-            
+
             if (files.Count > 0)
             {
                 Console.WriteLine("\n[FILES] Files on device (sorted by size):");
                 var totalFileSize = 0L;
                 var imageFiles = 0;
                 var otherFiles = 0;
-                
+
                 foreach (var file in files.OrderByDescending(f => f.Size))
                 {
                     var indicator = file.Name == _currentDevice.CurrentImageName ? " (current)" : "";
                     var fileType = IsImageFile(file.Name) ? "[IMG]" : "[FILE]";
                     Console.WriteLine($"     {fileType} {file.Name} - {GetHumanReadableSize(file.Size)}{indicator}");
                     totalFileSize += file.Size;
-                    
+
                     if (IsImageFile(file.Name)) imageFiles++;
                     else otherFiles++;
                 }
-                
+
                 Console.WriteLine($"\n[STATS] File Statistics:");
                 Console.WriteLine($"   Total files size: {GetHumanReadableSize(totalFileSize)}");
                 Console.WriteLine($"   Image files: {imageFiles}");
                 Console.WriteLine($"   Other files: {otherFiles}");
-                Console.WriteLine($"   Current image: {_currentDevice.CurrentImageName ?? "None"}");
-                
+                Console.WriteLine($"   Current image: {_currentDevice.CurrentImageName}");
+
                 if (totalFileSize != (_currentDevice.TotalStorageSize - _currentDevice.FreeStorageSize))
                 {
-                    var systemSpace = (_currentDevice.TotalStorageSize - _currentDevice.FreeStorageSize) - totalFileSize;
+                    var systemSpace = (_currentDevice.TotalStorageSize - _currentDevice.FreeStorageSize) -
+                                      totalFileSize;
                     Console.WriteLine($"   System/overhead: {GetHumanReadableSize(systemSpace)}");
                 }
             }
@@ -763,13 +831,13 @@ static void ShowVersion()
         }
     }
 
-    static bool IsImageFile(string fileName)
+    private static bool IsImageFile(string fileName)
     {
         var imageExtensions = new[] { ".png", ".gif" };
         return imageExtensions.Any(ext => fileName.EndsWith(ext, StringComparison.OrdinalIgnoreCase));
     }
 
-    static async Task UploadFirmware()
+    private static async Task UploadFirmware()
     {
         if (_currentDevice?.IsConnected != true)
         {
@@ -829,7 +897,7 @@ static void ShowVersion()
         Console.WriteLine("\n[WARNING] FIRMWARE UPDATE CONFIRMATION");
         Console.Write("Are you sure you want to proceed with firmware update? (y/N): ");
         var confirmation = Console.ReadLine()?.Trim().ToLower();
-        
+
         if (confirmation != "y" && confirmation != "yes")
         {
             Console.WriteLine("Firmware update cancelled.");
@@ -854,12 +922,15 @@ static void ShowVersion()
             var sinceLastUpdate = now - lastProgressTime;
 
             var overallSpeed = elapsed.TotalSeconds > 0 ? currentBytes / elapsed.TotalSeconds : 0;
-            var recentSpeed = sinceLastUpdate.TotalSeconds > 0.1 ? 
-                (currentBytes - lastProgressBytes) / sinceLastUpdate.TotalSeconds : overallSpeed;
+            var recentSpeed = sinceLastUpdate.TotalSeconds > 0.1
+                ? (currentBytes - lastProgressBytes) / sinceLastUpdate.TotalSeconds
+                : overallSpeed;
 
             var remainingBytes = fileSize - currentBytes;
-            var eta = recentSpeed > 0 && remainingBytes > 0 ? TimeSpan.FromSeconds(remainingBytes / recentSpeed) : TimeSpan.Zero;
-            
+            var eta = recentSpeed > 0 && remainingBytes > 0
+                ? TimeSpan.FromSeconds(remainingBytes / recentSpeed)
+                : TimeSpan.Zero;
+
             // Ensure ETA is not negative or infinity
             if (eta.TotalSeconds < 0 || double.IsInfinity(eta.TotalSeconds) || double.IsNaN(eta.TotalSeconds))
             {
@@ -868,9 +939,9 @@ static void ShowVersion()
 
             var progressBar = CreateProgressBar(args.ProgressLevel, 30);
             Console.Write($"\r[UPLOAD] Upload: {progressBar} {args.ProgressLevel:F1}% | " +
-                         $"{GetHumanReadableSize(currentBytes)}/{GetHumanReadableSize(fileSize)} | " +
-                         $"Speed: {GetHumanReadableSize((long)recentSpeed)}/s | " +
-                         $"ETA: {FormatTimeSpan(eta)}");
+                          $"{GetHumanReadableSize(currentBytes)}/{GetHumanReadableSize(fileSize)} | " +
+                          $"Speed: {GetHumanReadableSize((long)recentSpeed)}/s | " +
+                          $"ETA: {FormatTimeSpan(eta)}");
 
             lastProgressTime = now;
             lastProgressBytes = currentBytes;
@@ -880,7 +951,7 @@ static void ShowVersion()
         {
             var totalTime = DateTime.Now - uploadStartTime;
             Console.WriteLine(); // New line after progress bar
-            
+
             if (fileUploadFinishedArgs.Success)
             {
                 var avgSpeed = totalTime.TotalSeconds > 0 ? fileSize / totalTime.TotalSeconds : 0;
@@ -889,12 +960,12 @@ static void ShowVersion()
                 Console.WriteLine($"   Average speed: {GetHumanReadableSize((long)avgSpeed)}/s");
                 Console.WriteLine("\n[INFO] Activating firmware update process...");
                 Console.WriteLine("[INFO] Device will now process the firmware - monitor progress below:");
-                
+
                 Task.Run(async () =>
                 {
                     try
                     {
-                        await _currentDevice.ActivateFileStorageScanAsync();
+                        if (_currentDevice != null) await _currentDevice.ActivateFileStorageScanAsync();
                         Console.WriteLine("[OK] Firmware processing activated");
                         Console.WriteLine("[INFO] Waiting for device to begin firmware update...");
                     }
@@ -931,7 +1002,7 @@ static void ShowVersion()
         }
     }
 
-    static async Task FormatDisk()
+    private static async Task FormatDisk()
     {
         if (_currentDevice?.IsConnected != true)
         {
@@ -954,12 +1025,13 @@ static void ShowVersion()
             await _currentDevice.GetFileListAsync();
             await _currentDevice.GetFreeStorageSizeAsync();
             await _currentDevice.GetTotalStorageSizeAsync();
-            
+
             Console.WriteLine("Current Device Storage:");
             Console.WriteLine($"   Total space: {GetHumanReadableSize(_currentDevice.TotalStorageSize)}");
-            Console.WriteLine($"   Used space: {GetHumanReadableSize(_currentDevice.TotalStorageSize - _currentDevice.FreeStorageSize)}");
+            Console.WriteLine(
+                $"   Used space: {GetHumanReadableSize(_currentDevice.TotalStorageSize - _currentDevice.FreeStorageSize)}");
             Console.WriteLine($"   Files count: {_currentDevice.FileList.Count}");
-            Console.WriteLine($"   Current image: {_currentDevice.CurrentImageName ?? "None"}");
+            Console.WriteLine($"   Current image: {_currentDevice.CurrentImageName}");
             Console.WriteLine();
         }
         catch (Exception ex)
@@ -989,30 +1061,30 @@ static void ShowVersion()
 
         Console.WriteLine("\n[INFO] Starting disk format...");
         Console.WriteLine("[WARNING] Do not disconnect the device during formatting!");
-        
+
         var formatStartTime = DateTime.Now;
-        
+
         try
         {
             var success = await _currentDevice.FormatDiskAsync();
             var formatTime = DateTime.Now - formatStartTime;
-            
+
             if (success)
             {
                 Console.WriteLine($"\n[OK] Disk format completed successfully!");
                 Console.WriteLine($"   Format time: {FormatTimeSpanWithMs(formatTime)}");
                 Console.WriteLine("[INFO] Refreshing device information...");
-                
+
                 // Give the device a moment to complete the format
                 await Task.Delay(2000);
-                
+
                 // Refresh device information
                 try
                 {
                     await _currentDevice.GetFileListAsync();
                     await _currentDevice.GetFreeStorageSizeAsync();
                     await _currentDevice.GetTotalStorageSizeAsync();
-                    
+
                     Console.WriteLine("\n[POST-FORMAT] Storage Status:");
                     Console.WriteLine($"   Total space: {GetHumanReadableSize(_currentDevice.TotalStorageSize)}");
                     Console.WriteLine($"   Free space: {GetHumanReadableSize(_currentDevice.FreeStorageSize)}");
@@ -1040,7 +1112,7 @@ static void ShowVersion()
         }
     }
 
-    static async Task RestartDevice()
+    private static async Task RestartDevice()
     {
         if (_currentDevice?.IsConnected != true)
         {
@@ -1058,7 +1130,7 @@ static void ShowVersion()
 
         Console.Write("Are you sure you want to restart the device? (y/N): ");
         var confirm = Console.ReadLine()?.Trim().ToLower();
-        
+
         if (confirm != "y" && confirm != "yes")
         {
             Console.WriteLine("Restart cancelled.");
@@ -1067,57 +1139,58 @@ static void ShowVersion()
 
         var deviceName = _currentDevice.DeviceName;
         var portName = _currentDevice.PortName;
-        
+
         Console.WriteLine($"\n[INFO] Restarting device '{deviceName}'...");
-        
+
         try
         {
             var success = await _currentDevice.RestartDeviceAsync();
-            
+
             if (success)
             {
                 Console.WriteLine("[OK] Restart command sent successfully!");
                 Console.WriteLine("[INFO] Device is now restarting...");
-                
+
                 // Disconnect our current connection since a device is restarting
                 _currentDevice.Disconnect();
-                
+
                 Console.WriteLine($"[INFO] Disconnected from {portName}");
                 Console.WriteLine("[INFO] Device will take a few seconds to restart");
-                Console.WriteLine("[INFO] You can try to reconnect in about 3-5 seconds");;
+                Console.WriteLine("[INFO] You can try to reconnect in about 3-5 seconds");
                 Console.WriteLine();
-                
+
                 // Offer to automatically reconnect
                 Console.Write("Would you like to automatically attempt reconnection? (Y/n): ");
                 var autoReconnect = Console.ReadLine()?.Trim().ToLower();
-                
+
                 if (autoReconnect != "n" && autoReconnect != "no")
                 {
                     Console.WriteLine("[INFO] Waiting for device to restart...");
-                    
+
                     // Wait for a device to restart
                     for (int i = 3; i > 0; i--)
                     {
                         Console.Write($"\rWaiting {i} seconds before reconnection attempt...");
                         await Task.Delay(1000);
                     }
+
                     Console.WriteLine();
-                    
+
                     // Attempt to reconnect
                     Console.WriteLine($"[INFO] Attempting to reconnect to {portName}...");
-                    
+
                     var reconnectAttempts = 0;
                     const int maxAttempts = 5;
-                    
+
                     while (reconnectAttempts < maxAttempts)
                     {
                         try
                         {
                             reconnectAttempts++;
                             Console.WriteLine($"[INFO] Reconnection attempt {reconnectAttempts}/{maxAttempts}...");
-                            
+
                             await ConnectToDevice(portName);
-                            
+
                             if (_currentDevice?.IsConnected == true)
                             {
                                 Console.WriteLine($"[OK] Successfully reconnected to '{_currentDevice.DeviceName}'!");
@@ -1128,16 +1201,17 @@ static void ShowVersion()
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine($"[WARNING] Reconnection attempt {reconnectAttempts} failed: {ex.Message}");
+                            Console.WriteLine(
+                                $"[WARNING] Reconnection attempt {reconnectAttempts} failed: {ex.Message}");
                         }
-                        
+
                         if (reconnectAttempts < maxAttempts)
                         {
                             Console.WriteLine("[INFO] Waiting 3 seconds before next attempt...");
                             await Task.Delay(3000);
                         }
                     }
-                    
+
                     Console.WriteLine($"[WARNING] Could not automatically reconnect after {maxAttempts} attempts");
                     Console.WriteLine($"[INFO] You can manually reconnect to {portName} when the device is ready");
                 }
@@ -1152,7 +1226,7 @@ static void ShowVersion()
         {
             Console.WriteLine($"[ERROR] Restart operation error: {ex.Message}");
             Console.WriteLine("   The device connection may have been lost");
-            
+
             // Ensure we disconnect if there was an error
             try
             {
@@ -1165,10 +1239,10 @@ static void ShowVersion()
         }
     }
 
-    static async Task RunInteractiveMode()
+    private static async Task RunInteractiveMode()
     {
         _manager = new BusyTagManager();
-        
+
         // Set up event handlers
         _manager.FoundBusyTagSerialDevices += OnDevicesFound;
         _manager.DeviceConnected += OnDeviceConnected;
@@ -1261,16 +1335,17 @@ static void ShowVersion()
         _manager?.StopPeriodicDeviceSearch();
         _currentDevice?.Disconnect();
         _manager?.Dispose();
-        
+
         Console.WriteLine("\nGoodbye!");
     }
 
-    static void ShowMenu()
+    private static void ShowMenu()
     {
         Console.Clear();
         Console.WriteLine("BusyTag Device Manager");
         Console.WriteLine("=====================");
-        Console.WriteLine($"Current device: {(_currentDevice?.IsConnected == true ? $"{_currentDevice.DeviceName} ({_currentDevice.PortName})" : "None")}");
+        Console.WriteLine(
+            $"Current device: {(_currentDevice?.IsConnected == true ? $"{_currentDevice.DeviceName} ({_currentDevice.PortName})" : "None")}");
         Console.WriteLine();
         Console.WriteLine("1. Scan for devices");
         Console.WriteLine("2. Connect to device");
@@ -1293,81 +1368,85 @@ static void ShowVersion()
         Console.Write("Enter your choice: ");
     }
 
-static void ShowHelp()
-{
-    Console.WriteLine("BusyTag Device Manager CLI");
-    Console.WriteLine("==========================");
-    Console.WriteLine("Usage: busytag-cli [command] [arguments]");
-    Console.WriteLine();
-    Console.WriteLine("Device Management:");
-    Console.WriteLine("  scan, list              - Scan for BusyTag devices");
-    Console.WriteLine("  connect <port>          - Connect to device on specified port");
-    Console.WriteLine("  info <port>             - Show device information");
-    Console.WriteLine("  restart <port>          - Restart the device");
-    Console.WriteLine();
-    Console.WriteLine("Display Control:");
-    Console.WriteLine("  color <port> <color> [brightness] [led_bits]");
-    Console.WriteLine("                          - Set solid color (name/hex/RGB)");
-    Console.WriteLine("  brightness <port> <level>");
-    Console.WriteLine("                          - Set display brightness (0-100)");
-    Console.WriteLine("  pattern <port> <name>   - Set LED pattern");
-    Console.WriteLine("  show <port> <filename>  - Display image file");
-    Console.WriteLine();
-    Console.WriteLine("File Management:");
-    Console.WriteLine("  upload <port> <file>    - Upload file to device");
-    Console.WriteLine("  download <port> <filename> <dest>");
-    Console.WriteLine("                          - Download file from device");
-    Console.WriteLine("  delete <port> <filename>");
-    Console.WriteLine("                          - Delete file from device");
-    Console.WriteLine("  files <port>            - List files on device");
-    Console.WriteLine();
-    Console.WriteLine("Storage Operations:");
-    Console.WriteLine("  storage <port>          - Show storage information");
-    Console.WriteLine("  format <port> --force   - Format device storage (DANGER!)");
-    Console.WriteLine();
-    Console.WriteLine("Firmware:");
-    Console.WriteLine("  firmware <port> <file.bin>");
-    Console.WriteLine("                          - Upload firmware to device");
-    Console.WriteLine();
-    Console.WriteLine("Other:");
-    Console.WriteLine("  version, -v, --version  - Show version information");
-    Console.WriteLine("  help, -h, --help        - Show this help message");
-    Console.WriteLine();
-    Console.WriteLine("Color Formats:");
-    Console.WriteLine("  Named colors: red, green, blue, yellow, cyan, magenta, white, off");
-    Console.WriteLine("  Hex colors: FF0000, #FF0000 (red)");
-    Console.WriteLine("  RGB values: 255,0,0 (red)");
-    Console.WriteLine();
-    Console.WriteLine("Examples:");
-    Console.WriteLine("  busytag-cli scan");
-    Console.WriteLine("  busytag-cli connect COM3");
-    Console.WriteLine("  busytag-cli info /dev/ttyUSB0");
-    Console.WriteLine("  busytag-cli color COM3 red 75");
-    Console.WriteLine("  busytag-cli color COM3 FF0000 50 127");
-    Console.WriteLine("  busytag-cli color COM3 255,128,0");
-    Console.WriteLine("  busytag-cli brightness COM3 80");
-    Console.WriteLine("  busytag-cli upload COM3 \"photo.png\"");
-    Console.WriteLine("  busytag-cli files COM3");
-    Console.WriteLine("  busytag-cli show COM3 photo.png");
-    Console.WriteLine("  busytag-cli storage COM3");
-    Console.WriteLine("  busytag-cli delete COM3 old_image.png");
-    Console.WriteLine("  busytag-cli firmware COM3 \"firmware_v2.1.bin\"");
-    Console.WriteLine("  busytag-cli format COM3 --force");
-    Console.WriteLine();
-    Console.WriteLine("Run without arguments for interactive mode.");
-}
+    private static void ShowHelp()
+    {
+        Console.WriteLine("BusyTag Device Manager CLI");
+        Console.WriteLine("==========================");
+        Console.WriteLine("Usage: busytag-cli [command] [arguments]");
+        Console.WriteLine();
+        Console.WriteLine("Device Management:");
+        Console.WriteLine("  scan, list              - Scan for BusyTag devices");
+        Console.WriteLine("  connect <port>          - Connect to device on specified port");
+        Console.WriteLine("  info <port>             - Show device information");
+        Console.WriteLine("  restart <port>          - Restart the device");
+        Console.WriteLine();
+        Console.WriteLine("Display Control:");
+        Console.WriteLine("  color <port> <color> [brightness] [led_bits]");
+        Console.WriteLine("                          - Set solid color (name/hex/RGB)");
+        Console.WriteLine("  brightness <port> <level>");
+        Console.WriteLine("                          - Set display brightness (0-100)");
+        Console.WriteLine("  pattern <port> <name_or_number> [count]");
+        Console.WriteLine("                          - Set LED pattern by name or number");
+        Console.WriteLine("                            count: 1-254 (play count times), 255 (infinite)");
+        Console.WriteLine("  show <port> <filename>  - Display image file");
+        Console.WriteLine();
+        Console.WriteLine("File Management:");
+        Console.WriteLine("  upload <port> <file>    - Upload file to device");
+        Console.WriteLine("  download <port> <filename> <dest>");
+        Console.WriteLine("                          - Download file from device");
+        Console.WriteLine("  delete <port> <filename>");
+        Console.WriteLine("                          - Delete file from device");
+        Console.WriteLine("  files <port>            - List files on device");
+        Console.WriteLine();
+        Console.WriteLine("Storage Operations:");
+        Console.WriteLine("  storage <port>          - Show storage information");
+        Console.WriteLine("  format <port> --force   - Format device storage (DANGER!)");
+        Console.WriteLine();
+        Console.WriteLine("Firmware:");
+        Console.WriteLine("  firmware <port> <file.bin>");
+        Console.WriteLine("                          - Upload firmware to device");
+        Console.WriteLine();
+        Console.WriteLine("Other:");
+        Console.WriteLine("  version, -v, --version  - Show version information");
+        Console.WriteLine("  help, -h, --help        - Show this help message");
+        Console.WriteLine();
+        Console.WriteLine("Color Formats:");
+        Console.WriteLine("  Named colors: red, green, blue, yellow, cyan, magenta, white, off");
+        Console.WriteLine("  Hex colors: FF0000, #FF0000 (red)");
+        Console.WriteLine("  RGB values: 255,0,0 (red)");
+        Console.WriteLine();
+        Console.WriteLine("Examples:");
+        Console.WriteLine("  busytag-cli scan");
+        Console.WriteLine("  busytag-cli connect COM3");
+        Console.WriteLine("  busytag-cli info /dev/ttyUSB0");
+        Console.WriteLine("  busytag-cli color COM3 red 75");
+        Console.WriteLine("  busytag-cli color COM3 FF0000 50 127");
+        Console.WriteLine("  busytag-cli color COM3 255,128,0");
+        Console.WriteLine("  busytag-cli brightness COM3 80");
+        Console.WriteLine("  busytag-cli pattern COM3 \"Police 1\" 5");
+        Console.WriteLine("  busytag-cli pattern COM3 1 255");
+        Console.WriteLine("  busytag-cli upload COM3 \"photo.png\"");
+        Console.WriteLine("  busytag-cli files COM3");
+        Console.WriteLine("  busytag-cli show COM3 photo.png");
+        Console.WriteLine("  busytag-cli storage COM3");
+        Console.WriteLine("  busytag-cli delete COM3 old_image.png");
+        Console.WriteLine("  busytag-cli firmware COM3 \"firmware_v2.1.bin\"");
+        Console.WriteLine("  busytag-cli format COM3 --force");
+        Console.WriteLine();
+        Console.WriteLine("Run without arguments for interactive mode.");
+    }
 
-    static async Task ScanForDevices()
+    private static async Task ScanForDevices()
     {
         Console.WriteLine("Scanning for BusyTag devices...");
-        
+
         if (_manager == null)
         {
             _manager = new BusyTagManager();
         }
 
         var devices = await _manager.FindBusyTagDevice();
-        
+
         if (devices == null || devices.Count == 0)
         {
             Console.WriteLine("No BusyTag devices found.");
@@ -1382,7 +1461,7 @@ static void ShowHelp()
         }
     }
 
-    static async Task ConnectToDevice(string? portName = null)
+    private static async Task ConnectToDevice(string? portName = null)
     {
         if (portName == null)
         {
@@ -1392,7 +1471,7 @@ static void ShowHelp()
             }
 
             var devices = await _manager.FindBusyTagDevice();
-            
+
             if (devices == null || devices.Count == 0)
             {
                 Console.WriteLine("No devices found. Please scan for devices first.");
@@ -1420,15 +1499,15 @@ static void ShowHelp()
         try
         {
             Console.WriteLine($"Connecting to {portName}...");
-            
+
             _currentDevice?.Disconnect();
             _currentDevice = new BusyTagDevice(portName);
-            
+
             // Set up event handlers
             SetupDeviceEventHandlers(_currentDevice);
-            
+
             await _currentDevice.Connect();
-            
+
             if (_currentDevice.IsConnected)
             {
                 Console.WriteLine($"Successfully connected to {_currentDevice.DeviceName}!");
@@ -1446,10 +1525,10 @@ static void ShowHelp()
         }
     }
 
-    static async Task ShowDeviceInfo(string? portName = null)
+    private static async Task ShowDeviceInfo(string? portName = null)
     {
         BusyTagDevice? device = _currentDevice;
-        
+
         if (portName != null)
         {
             device = new BusyTagDevice(portName);
@@ -1469,7 +1548,8 @@ static void ShowHelp()
         Console.WriteLine($"  Firmware: {device.FirmwareVersion}");
         Console.WriteLine($"  Port: {device.PortName}");
         Console.WriteLine($"  Current Image: {device.CurrentImageName}");
-        Console.WriteLine($"  Storage: {await device.GetFreeStorageSizeAsync():N0} / {await device.GetTotalStorageSizeAsync():N0} bytes free");
+        Console.WriteLine(
+            $"  Storage: {await device.GetFreeStorageSizeAsync():N0} / {await device.GetTotalStorageSizeAsync():N0} bytes free");
         Console.WriteLine($"  Files: {device.FileList.Count}");
 
         if (portName != null && device != _currentDevice)
@@ -1478,12 +1558,12 @@ static void ShowHelp()
         }
     }
 
-    static async Task ShowCurrentDeviceInfo()
+    private static async Task ShowCurrentDeviceInfo()
     {
         await ShowDeviceInfo();
     }
 
-    static async Task SetSolidColor()
+    private static async Task SetSolidColor()
     {
         if (_currentDevice?.IsConnected != true)
         {
@@ -1496,7 +1576,7 @@ static void ShowHelp()
         Console.WriteLine("2. Hex color (e.g., FF0000 for red, 00FF00 for green)");
         Console.WriteLine("3. RGB values (e.g., 255,0,0 for red)");
         Console.WriteLine();
-        
+
         Console.Write("Enter color (name/hex/RGB): ");
         var colorInput = Console.ReadLine()?.Trim();
 
@@ -1526,15 +1606,14 @@ static void ShowHelp()
         brightness = Math.Clamp(brightness, 0, 100);
         ledBits = Math.Clamp(ledBits, 1, 127);
 
-        bool success = false;
-
         try
         {
             // Check if it's an RGB format (e.g., "255,0,0")
+            var success = false;
             if (colorInput.Contains(','))
             {
                 var rgbParts = colorInput.Split(',');
-                if (rgbParts.Length == 3 && 
+                if (rgbParts.Length == 3 &&
                     int.TryParse(rgbParts[0].Trim(), out int r) &&
                     int.TryParse(rgbParts[1].Trim(), out int g) &&
                     int.TryParse(rgbParts[2].Trim(), out int b))
@@ -1543,20 +1622,20 @@ static void ShowHelp()
                     r = (int)(r * brightness / 100.0);
                     g = (int)(g * brightness / 100.0);
                     b = (int)(b * brightness / 100.0);
-                    
+
                     // Clamp to 0-255
                     r = Math.Clamp(r, 0, 255);
                     g = Math.Clamp(g, 0, 255);
                     b = Math.Clamp(b, 0, 255);
-                    
+
                     success = await _currentDevice.SendRgbColorAsync(r, g, b, ledBits);
-                    Console.WriteLine(success ? 
-                        $"RGB color set successfully! R:{r}, G:{g}, B:{b}, Brightness:{brightness}%, LEDs:{ledBits}" : 
-                        "Failed to set RGB color.");
+                    Console.WriteLine(success
+                        ? $"RGB color set successfully! R:{r}, G:{g}, B:{b}, Brightness:{brightness}%, LEDs:{ledBits}"
+                        : "Failed to set RGB color.");
                     return;
                 }
             }
-            
+
             // Check if it's a hex format (e.g., "FF0000" or "#FF0000")
             var hexColor = colorInput.Replace("#", "").ToUpper();
             if (hexColor.Length == 6 && IsValidHex(hexColor))
@@ -1564,24 +1643,24 @@ static void ShowHelp()
                 var r = Convert.ToInt32(hexColor.Substring(0, 2), 16);
                 var g = Convert.ToInt32(hexColor.Substring(2, 2), 16);
                 var b = Convert.ToInt32(hexColor.Substring(4, 2), 16);
-                
+
                 // Apply brightness scaling
                 r = (int)(r * brightness / 100.0);
                 g = (int)(g * brightness / 100.0);
                 b = (int)(b * brightness / 100.0);
-                
+
                 success = await _currentDevice.SendRgbColorAsync(r, g, b, ledBits);
-                Console.WriteLine(success ? 
-                    $"Hex color set successfully! #{hexColor}, RGB({r},{g},{b}), Brightness:{brightness}%, LEDs:{ledBits}" : 
-                    "Failed to set hex color.");
+                Console.WriteLine(success
+                    ? $"Hex color set successfully! #{hexColor}, RGB({r},{g},{b}), Brightness:{brightness}%, LEDs:{ledBits}"
+                    : "Failed to set hex color.");
                 return;
             }
-            
-            // Otherwise, treat as predefined color name
+
+            // Otherwise, treat as a predefined color name
             success = await _currentDevice.SetSolidColorAsync(colorInput.ToLower(), brightness, ledBits);
-            Console.WriteLine(success ? 
-                $"Color '{colorInput}' set successfully! Brightness:{brightness}%, LEDs:{ledBits}" : 
-                "Failed to set color. Use: red, green, blue, yellow, cyan, magenta, white, off");
+            Console.WriteLine(success
+                ? $"Color '{colorInput}' set successfully! Brightness:{brightness}%, LEDs:{ledBits}"
+                : "Failed to set color. Use: red, green, blue, yellow, cyan, magenta, white, off");
         }
         catch (Exception ex)
         {
@@ -1589,12 +1668,12 @@ static void ShowHelp()
         }
     }
 
-    static bool IsValidHex(string hex)
+    private static bool IsValidHex(string hex)
     {
         return hex.All(c => "0123456789ABCDEF".Contains(c));
     }
 
-    static async Task SetPattern()
+    private static async Task SetPattern()
     {
         if (_currentDevice?.IsConnected != true)
         {
@@ -1604,22 +1683,49 @@ static void ShowHelp()
 
         Console.WriteLine("Available patterns:");
         var patterns = PatternListCommands.PatternList;
-        var patternNames = patterns.Keys.ToList();
-        
-        for (int i = 0; i < patternNames.Count; i++)
+        var patternList = patterns.Values.Where(p => p != null).ToList();
+
+        for (int i = 0; i < patternList.Count; i++)
         {
-            var pattern = patterns[patternNames[i]];
-            Console.WriteLine($"  {i + 1}. {pattern?.Name}");
+            Console.WriteLine($"  {i + 1}. {patternList[i]?.Name}");
         }
 
         Console.Write("Select pattern (number): ");
-        if (int.TryParse(Console.ReadLine(), out int choice) && choice > 0 && choice <= patternNames.Count)
+        if (int.TryParse(Console.ReadLine(), out int choice) && choice > 0 && choice <= patternList.Count)
         {
-            var selectedPattern = patterns[patternNames[choice - 1]];
+            var selectedPattern = patternList[choice - 1];
             if (selectedPattern != null)
             {
+                Console.Write("Enter count (1-254, 255=infinite, default=1): ");
+                var countInput = Console.ReadLine()?.Trim();
+                int count = 1;
+
+                if (!string.IsNullOrEmpty(countInput))
+                {
+                    if (int.TryParse(countInput, out int parsedCount) && parsedCount >= 1 && parsedCount <= 255)
+                    {
+                        count = parsedCount;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Invalid count. Using default count of 1.");
+                    }
+                }
+
                 var success = await _currentDevice.SetNewCustomPattern(selectedPattern.PatternLines, true, false);
-                Console.WriteLine(success ? "Pattern set successfully!" : "Failed to set pattern.");
+                if (success && count != 1)
+                {
+                    _ = _currentDevice.PlayPatternAsync(true, count);
+                    var countText = count == 255 ? "infinite" : count.ToString();
+                    Console.WriteLine(
+                        $"Pattern '{selectedPattern.Name}' set successfully! Note: Count {countText} requested (requires firmware support)");
+                }
+                else
+                {
+                    Console.WriteLine(success
+                        ? $"Pattern '{selectedPattern.Name}' set successfully!"
+                        : "Failed to set pattern.");
+                }
             }
         }
         else
@@ -1679,7 +1785,8 @@ static void ShowHelp()
 
         // Check available space
         await _currentDevice.GetFreeStorageSizeAsync();
-        Console.WriteLine($"  Device free space: {_currentDevice.FreeStorageSize:N0} bytes ({GetHumanReadableSize(_currentDevice.FreeStorageSize)})");
+        Console.WriteLine(
+            $"  Device free space: {_currentDevice.FreeStorageSize:N0} bytes ({GetHumanReadableSize(_currentDevice.FreeStorageSize)})");
 
         if (fileSize > _currentDevice.FreeStorageSize)
         {
@@ -1702,7 +1809,7 @@ static void ShowHelp()
         }
 
         Console.WriteLine("\nStarting file upload...");
-        
+
         // Setup progress tracking
         var uploadStartTime = DateTime.Now;
         var lastProgressTime = DateTime.Now;
@@ -1718,13 +1825,16 @@ static void ShowHelp()
 
             // Calculate speed (bytes per second)
             var overallSpeed = elapsed.TotalSeconds > 0 ? currentBytes / elapsed.TotalSeconds : 0;
-            var recentSpeed = sinceLastUpdate.TotalSeconds > 0.1 ? 
-                (currentBytes - lastProgressBytes) / sinceLastUpdate.TotalSeconds : overallSpeed;
+            var recentSpeed = sinceLastUpdate.TotalSeconds > 0.1
+                ? (currentBytes - lastProgressBytes) / sinceLastUpdate.TotalSeconds
+                : overallSpeed;
 
             // Calculate ETA
             var remainingBytes = fileSize - currentBytes;
-            var eta = recentSpeed > 0 && remainingBytes > 0 ? TimeSpan.FromSeconds(remainingBytes / recentSpeed) : TimeSpan.Zero;
-            
+            var eta = recentSpeed > 0 && remainingBytes > 0
+                ? TimeSpan.FromSeconds(remainingBytes / recentSpeed)
+                : TimeSpan.Zero;
+
             // Ensure ETA is not negative or infinity
             if (eta.TotalSeconds < 0 || double.IsInfinity(eta.TotalSeconds) || double.IsNaN(eta.TotalSeconds))
             {
@@ -1734,9 +1844,9 @@ static void ShowHelp()
             // Update progress display
             var progressBar = CreateProgressBar(args.ProgressLevel, 30);
             Console.Write($"\r{progressBar} {args.ProgressLevel:F1}% | " +
-                         $"{GetHumanReadableSize(currentBytes)}/{GetHumanReadableSize(fileSize)} | " +
-                         $"Speed: {GetHumanReadableSize((long)recentSpeed)}/s | " +
-                         $"ETA: {FormatTimeSpan(eta)}");
+                          $"{GetHumanReadableSize(currentBytes)}/{GetHumanReadableSize(fileSize)} | " +
+                          $"Speed: {GetHumanReadableSize((long)recentSpeed)}/s | " +
+                          $"ETA: {FormatTimeSpan(eta)}");
 
             lastProgressTime = now;
             lastProgressBytes = currentBytes;
@@ -1746,21 +1856,21 @@ static void ShowHelp()
         {
             var totalTime = DateTime.Now - uploadStartTime;
             Console.WriteLine(); // New line after the progress bar
-            
+
             if (fileUploadFinishedArgs.Success)
             {
                 var avgSpeed = totalTime.TotalSeconds > 0 ? fileSize / totalTime.TotalSeconds : 0;
                 Console.WriteLine("[OK] Upload completed successfully!");
                 Console.WriteLine($"   Time: {FormatTimeSpanWithMs(totalTime)}");
                 Console.WriteLine($"   Average speed: {GetHumanReadableSize((long)avgSpeed)}/s");
-                
+
                 // Check if an uploaded file is a .bin file and trigger a storage scan
                 if (fileName.EndsWith(".bin", StringComparison.OrdinalIgnoreCase))
                 {
                     Console.WriteLine("\n[INFO] Binary file detected - activating device storage scan...");
                     Console.WriteLine("[INFO] Monitoring firmware update progress...");
                     Console.WriteLine("   Note: If this is a firmware file, update progress will be shown below");
-                    
+
                     Task.Run(async () =>
                     {
                         try
@@ -1770,11 +1880,11 @@ static void ShowHelp()
                             {
                                 Console.WriteLine("[OK] Device storage scan activated successfully!");
                                 Console.WriteLine("   Device is now scanning and updating file system...");
-                                
+
                                 // Wait a moment for the scan to process
                                 await Task.Delay(1000);
-                                
-                                // Refresh file list after scan
+
+                                // Refresh the file list after scan
                                 Console.WriteLine("[INFO] Refreshing file list...");
                                 await _currentDevice.GetFileListAsync();
                                 Console.WriteLine($"   Files on device: {_currentDevice.FileList.Count}");
@@ -1817,16 +1927,16 @@ static void ShowHelp()
         }
     }
 
-    static string CreateProgressBar(float percentage, int width)
+    private static string CreateProgressBar(float percentage, int width)
     {
         var filled = (int)(percentage / 100.0 * width);
         var bar = new string('█', filled) + new string('░', width - filled);
         return $"[{bar}]";
     }
 
-    static string GetHumanReadableSize(long bytes)
+    private static string GetHumanReadableSize(long bytes)
     {
-        string[] suffixes = { "B", "KB", "MB", "GB", "TB" };
+        string[] suffixes = ["B", "KB", "MB", "GB", "TB"];
         int counter = 0;
         decimal number = bytes;
         while (Math.Round(number / 1024) >= 1)
@@ -1834,10 +1944,11 @@ static void ShowHelp()
             number /= 1024;
             counter++;
         }
+
         return $"{number:N1} {suffixes[counter]}";
     }
 
-    static string FormatTimeSpan(TimeSpan timeSpan)
+    private static string FormatTimeSpan(TimeSpan timeSpan)
     {
         if (timeSpan.TotalSeconds < 1)
             return "0s";
@@ -1849,7 +1960,7 @@ static void ShowHelp()
             return $"{timeSpan.Hours}h {timeSpan.Minutes}m {timeSpan.Seconds}s";
     }
 
-    static string FormatTimeSpanWithMs(TimeSpan timeSpan)
+    private static string FormatTimeSpanWithMs(TimeSpan timeSpan)
     {
         if (timeSpan.TotalSeconds < 1)
             return $"{timeSpan.TotalMilliseconds:F0}ms";
@@ -1861,7 +1972,7 @@ static void ShowHelp()
             return $"{timeSpan.Hours}h {timeSpan.Minutes}m {timeSpan.Seconds}.{timeSpan.Milliseconds:D3}s";
     }
 
-    static async Task ListFiles()
+    private static async Task ListFiles()
     {
         if (_currentDevice?.IsConnected != true)
         {
@@ -1870,7 +1981,7 @@ static void ShowHelp()
         }
 
         var files = await _currentDevice.GetFileListAsync();
-        
+
         if (files.Count == 0)
         {
             Console.WriteLine("No files found on device.");
@@ -1898,21 +2009,24 @@ static void ShowHelp()
             // Get and display current brightness
             var currentBrightness = await _currentDevice.GetDisplayBrightnessAsync();
             Console.WriteLine($"Current brightness: {currentBrightness}%");
-            
-            Console.Write($"Enter new brightness (0-100, current: {currentBrightness}%, or press Enter to keep current): ");
+
+            Console.Write(
+                $"Enter new brightness (0-100, current: {currentBrightness}%, or press Enter to keep current): ");
             var input = Console.ReadLine()?.Trim();
-            
+
             // If the user just pressed Enter, keep the current brightness
             if (string.IsNullOrEmpty(input))
             {
                 Console.WriteLine("Brightness unchanged.");
                 return;
             }
-            
+
             if (int.TryParse(input, out int brightness) && brightness >= 0 && brightness <= 100)
             {
                 var success = await _currentDevice.SetDisplayBrightnessAsync(brightness);
-                Console.WriteLine(success ? $"Brightness set to {brightness}% successfully!" : "Failed to set brightness.");
+                Console.WriteLine(success
+                    ? $"Brightness set to {brightness}% successfully!"
+                    : "Failed to set brightness.");
             }
             else
             {
@@ -1925,75 +2039,75 @@ static void ShowHelp()
         }
     }
 
-    static async Task SetCurrentImage()
-{
-    if (_currentDevice?.IsConnected != true)
+    private static async Task SetCurrentImage()
     {
-        Console.WriteLine("No device connected.");
-        return;
-    }
-
-    try
-    {
-        // Show the current image
-        Console.WriteLine($"Current image: {(_currentDevice.CurrentImageName ?? "None")}");
-        
-        // Get and display available files
-        var files = await _currentDevice.GetFileListAsync();
-        var imageFiles = files.Where(f => 
-            f.Name.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ||
-            f.Name.EndsWith(".gif", StringComparison.OrdinalIgnoreCase)
-        ).ToList();
-
-        if (imageFiles.Count == 0)
+        if (_currentDevice?.IsConnected != true)
         {
-            Console.WriteLine("No image files found on device. Upload some PNG or GIF images first.");
+            Console.WriteLine("No device connected.");
             return;
         }
 
-        Console.WriteLine("\nAvailable images:");
-        for (int i = 0; i < imageFiles.Count; i++)
+        try
         {
-            var indicator = imageFiles[i].Name == _currentDevice.CurrentImageName ? " (current)" : "";
-            Console.WriteLine($"  {i + 1}. {imageFiles[i].Name}{indicator} ({imageFiles[i].Size:N0} bytes)");
-        }
+            // Show the current image
+            Console.WriteLine($"Current image: {(_currentDevice.CurrentImageName ?? "None")}");
 
-        Console.Write($"\nSelect image (1-{imageFiles.Count}) or press Enter to cancel: ");
-        var input = Console.ReadLine()?.Trim();
+            // Get and display available files
+            var files = await _currentDevice.GetFileListAsync();
+            var imageFiles = files.Where(f =>
+                f.Name.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ||
+                f.Name.EndsWith(".gif", StringComparison.OrdinalIgnoreCase)
+            ).ToList();
 
-        if (string.IsNullOrEmpty(input))
-        {
-            Console.WriteLine("Cancelled.");
-            return;
-        }
-
-        if (int.TryParse(input, out int choice) && choice > 0 && choice <= imageFiles.Count)
-        {
-            var selectedFile = imageFiles[choice - 1];
-            Console.WriteLine($"Setting image to: {selectedFile.Name}");
-            
-            var success = await _currentDevice.ShowPictureAsync(selectedFile.Name);
-            if (success)
+            if (imageFiles.Count == 0)
             {
-                Console.WriteLine($"Successfully set current image to: {selectedFile.Name}");
+                Console.WriteLine("No image files found on device. Upload some PNG or GIF images first.");
+                return;
+            }
+
+            Console.WriteLine("\nAvailable images:");
+            for (int i = 0; i < imageFiles.Count; i++)
+            {
+                var indicator = imageFiles[i].Name == _currentDevice.CurrentImageName ? " (current)" : "";
+                Console.WriteLine($"  {i + 1}. {imageFiles[i].Name}{indicator} ({imageFiles[i].Size:N0} bytes)");
+            }
+
+            Console.Write($"\nSelect image (1-{imageFiles.Count}) or press Enter to cancel: ");
+            var input = Console.ReadLine()?.Trim();
+
+            if (string.IsNullOrEmpty(input))
+            {
+                Console.WriteLine("Cancelled.");
+                return;
+            }
+
+            if (int.TryParse(input, out int choice) && choice > 0 && choice <= imageFiles.Count)
+            {
+                var selectedFile = imageFiles[choice - 1];
+                Console.WriteLine($"Setting image to: {selectedFile.Name}");
+
+                var success = await _currentDevice.ShowPictureAsync(selectedFile.Name);
+                if (success)
+                {
+                    Console.WriteLine($"Successfully set current image to: {selectedFile.Name}");
+                }
+                else
+                {
+                    Console.WriteLine("Failed to set image.");
+                }
             }
             else
             {
-                Console.WriteLine("Failed to set image.");
+                Console.WriteLine("Invalid selection.");
             }
         }
-        else
+        catch (Exception ex)
         {
-            Console.WriteLine("Invalid selection.");
+            Console.WriteLine($"Error setting current image: {ex.Message}");
         }
     }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error setting current image: {ex.Message}");
-    }
-}
 
-    static async Task DownloadFile()
+    private static async Task DownloadFile()
     {
         if (_currentDevice?.IsConnected != true)
         {
@@ -2004,7 +2118,7 @@ static void ShowHelp()
         try
         {
             var files = await _currentDevice.GetFileListAsync();
-            
+
             if (files.Count == 0)
             {
                 Console.WriteLine("No files found on device.");
@@ -2033,10 +2147,10 @@ static void ShowHelp()
             }
 
             var selectedFile = files[choice - 1];
-            
+
             Console.Write($"Enter download path (or press Enter for current directory): ");
             var downloadPath = Console.ReadLine()?.Trim();
-            
+
             if (string.IsNullOrEmpty(downloadPath))
             {
                 downloadPath = Environment.CurrentDirectory;
@@ -2056,7 +2170,7 @@ static void ShowHelp()
             }
 
             var fullPath = Path.Combine(downloadPath, selectedFile.Name);
-            
+
             if (File.Exists(fullPath))
             {
                 Console.Write($"File '{selectedFile.Name}' already exists. Overwrite? (y/N): ");
@@ -2072,14 +2186,14 @@ static void ShowHelp()
             var downloadStartTime = DateTime.Now;
 
             var result = await _currentDevice.GetFileAsync(selectedFile.Name);
-            
+
             if (!string.IsNullOrEmpty(result))
             {
                 File.Copy(result, fullPath, true);
-                
+
                 var downloadTime = DateTime.Now - downloadStartTime;
                 var avgSpeed = downloadTime.TotalSeconds > 0 ? selectedFile.Size / downloadTime.TotalSeconds : 0;
-                
+
                 Console.WriteLine("[OK] Download completed successfully!");
                 Console.WriteLine($"   File: {fullPath}");
                 Console.WriteLine($"   Size: {GetHumanReadableSize(selectedFile.Size)}");
@@ -2097,7 +2211,7 @@ static void ShowHelp()
         }
     }
 
-    static async Task DeleteFile()
+    private static async Task DeleteFile()
     {
         if (_currentDevice?.IsConnected != true)
         {
@@ -2108,7 +2222,7 @@ static void ShowHelp()
         try
         {
             var files = await _currentDevice.GetFileListAsync();
-            
+
             if (files.Count == 0)
             {
                 Console.WriteLine("No files found on device.");
@@ -2138,7 +2252,7 @@ static void ShowHelp()
             }
 
             var selectedFile = files[choice - 1];
-            
+
             if (selectedFile.Name == _currentDevice.CurrentImageName)
             {
                 Console.WriteLine("[WARNING] This is the currently displayed image!");
@@ -2146,7 +2260,7 @@ static void ShowHelp()
 
             Console.Write($"Are you sure you want to delete '{selectedFile.Name}'? This cannot be undone! (y/N): ");
             var confirm = Console.ReadLine()?.Trim().ToLower();
-            
+
             if (confirm != "y" && confirm != "yes")
             {
                 Console.WriteLine("Delete cancelled.");
@@ -2154,13 +2268,13 @@ static void ShowHelp()
             }
 
             Console.WriteLine($"Deleting {selectedFile.Name}...");
-            
+
             var success = await _currentDevice.DeleteFile(selectedFile.Name);
-            
+
             if (success)
             {
                 Console.WriteLine($"[OK] File '{selectedFile.Name}' deleted successfully!");
-                
+
                 await _currentDevice.GetFreeStorageSizeAsync();
                 Console.WriteLine($"   Free space: {GetHumanReadableSize(_currentDevice.FreeStorageSize)}");
             }
@@ -2175,7 +2289,7 @@ static void ShowHelp()
         }
     }
 
-    static void DisconnectDevice()
+    private static void DisconnectDevice()
     {
         if (_currentDevice?.IsConnected == true)
         {
@@ -2188,23 +2302,20 @@ static void ShowHelp()
         }
     }
 
-    static void SetupDeviceEventHandlers(BusyTagDevice device)
+    private static void SetupDeviceEventHandlers(BusyTagDevice device)
     {
         device.ConnectionStateChanged += (sender, connected) =>
         {
             Console.WriteLine($"Device {(connected ? "connected" : "disconnected")}");
         };
 
-        device.ReceivedShowingPicture += (sender, imageName) =>
-        {
-            Console.WriteLine($"Now showing: {imageName}");
-        };
+        device.ReceivedShowingPicture += (sender, imageName) => { Console.WriteLine($"Now showing: {imageName}"); };
 
         device.FirmwareUpdateStatus += (sender, progress) =>
         {
             var progressBar = CreateProgressBar(progress, 40);
             Console.Write($"\rFirmware Update: {progressBar} {progress:F1}%");
-            
+
             if (progress >= 100.0f)
             {
                 Console.WriteLine(); // New line when complete
@@ -2225,22 +2336,23 @@ static void ShowHelp()
             // }
         };
     }
-    
-    static void OnDevicesFound(object? sender, List<string>? devices)
+
+    private static void OnDevicesFound(object? sender, List<string>? devices)
     {
         var now = DateTime.Now;
-        
+
         if (devices != null && devices.Count > 0)
         {
             bool devicesChanged = _lastFoundDevices == null || !devices.SequenceEqual(_lastFoundDevices);
             bool timeToUpdate = (now - _lastDeviceMessage).TotalSeconds > 30;
-            
+
             if (devicesChanged || timeToUpdate)
             {
                 if (devicesChanged)
                 {
                     Console.WriteLine($"\n[FOUND] {devices.Count} BusyTag device(s): {string.Join(", ", devices)}");
                 }
+
                 _lastFoundDevices = devices.ToList();
                 _lastDeviceMessage = now;
             }
@@ -2253,12 +2365,12 @@ static void ShowHelp()
         }
     }
 
-    static void OnDeviceConnected(object? sender, string portName)
+    private static void OnDeviceConnected(object? sender, string portName)
     {
         Console.WriteLine($"\nDevice connected: {portName}");
     }
 
-    static void OnDeviceDisconnected(object? sender, string portName)
+    private static void OnDeviceDisconnected(object? sender, string portName)
     {
         Console.WriteLine($"\nDevice disconnected: {portName}");
     }

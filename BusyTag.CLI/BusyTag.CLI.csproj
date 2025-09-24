@@ -10,7 +10,7 @@
 
         <!-- Package Information -->
         <PackageId>BusyTag.CLI</PackageId>
-        <Version>0.5.0</Version>
+        <Version>0.5.1</Version>
         <Authors>BUSY TAG SIA</Authors>
         <Company>BUSY TAG SIA</Company>
         <Product>BusyTag CLI</Product>
@@ -30,7 +30,7 @@
         <PackageTags>busytag;cli;device-management;serial;hardware;iot</PackageTags>
 
         <!-- Release notes (will be updated by automation) -->
-        <PackageReleaseNotes>Version 0.5.0: Updated library versions, project cleanup, and improved NuGet publishing automation.</PackageReleaseNotes>
+        <PackageReleaseNotes>Version 0.5.1: Enhanced LED pattern control - Added pattern count parameter (1-254 times, 255 infinite), pattern selection by number, improved pattern command syntax, and comprehensive pattern documentation with all 24 available patterns.</PackageReleaseNotes>
     </PropertyGroup>
 
     <!-- .NET Tool Configuration -->
@@ -50,7 +50,7 @@
 <!--    </ItemGroup>-->
 
     <ItemGroup>
-      <PackageReference Include="BusyTag.Lib" Version="0.5.3" />
+      <PackageReference Include="BusyTag.Lib" Version="0.5.4" />
     </ItemGroup>
 
 </Project>
