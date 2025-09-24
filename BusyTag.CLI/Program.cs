@@ -179,7 +179,7 @@ static async Task HandleColorCommand(string[] args)
                 success = await device.SendRgbColorAsync(r, g, bb, ledBits);
             }
         }
-        // Check if it's hex format
+        // Check if it's a hex format
         else if (color.Replace("#", "").Length == 6 && IsValidHex(color.Replace("#", "")))
         {
             var hexColor = color.Replace("#", "").ToUpper();

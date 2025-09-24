@@ -143,11 +143,30 @@ busytag-cli pattern <port> <pattern_name>     # Apply LED pattern
 ```
 
 **Available patterns:**
-- `rainbow`
-- `pulse`
-- `strobe`
-- `fade`
-- `custom` (user-defined)
+- `Default`
+- `Police 1`
+- `Police 2`
+- `Red flashes`
+- `Green flashes`
+- `Blue flashes`
+- `Yellow flashes`
+- `Cyan flashes`
+- `Magenta flashes`
+- `White flashes`
+- `Red running`
+- `Green running`
+- `Blue running`
+- `Yellow running`
+- `Cyan running`
+- `Magenta running`
+- `White running`
+- `Red pulses`
+- `Green pulses`
+- `Blue pulses`
+- `Yellow pulses`
+- `Cyan pulses`
+- `Magenta pulses`
+- `White pulses`
 
 #### Image Display
 ```bash
@@ -396,10 +415,49 @@ This project is licensed under the MIT License. See the main repository LICENSE 
 
 ## 📈 Version History
 
-### Latest Versions
-- **v0.3.4+** - Homebrew support, automated releases, native executables
-- **v0.2.0** - Command improvements and bug fixes
-- **v0.1.0** - Initial release with core functionality
+### v0.5.0 (Latest)
+- Updated library versions
+- Enhanced device communication stability
+- Improved error handling
+
+### v0.4.1
+- Project cleanup and code optimization
+- Minor bug fixes
+
+### v0.4.0
+- Updated library versions
+- Performance improvements
+- Better compatibility across platforms
+
+### v0.3.6
+- General version update
+- Stability improvements
+
+### v0.3.5
+- Fixed Homebrew formula path
+- Enhanced macOS installation process
+
+### v0.3.4 & v0.3.3
+- Homebrew support and automated releases
+- Native executables for better performance
+- Minor updates and code refinements
+
+### v0.3.2 & v0.3.1
+- Project file reorganization
+- Debug improvements
+
+### v0.3.0
+- Added Homebrew automation
+- Improved deployment process
+
+### v0.2.0
+- Major command improvements and bug fixes
+- Enhanced documentation
+
+### v0.1.0
+- Initial public release
+- Core CLI functionality
+- Device discovery and basic operations
 
 ## 🎯 Performance Optimization
 

@@ -12,7 +12,7 @@ A comprehensive command-line interface for managing BusyTag devices. Control you
 ## ✨ Features
 
 - **🔍 Device Discovery & Connection** - Automatically find and connect to BusyTag devices
-- **🎨 Display Control** - Set colors, patterns, brightness, and display images
+- **🎨 Display Control** - Set colors, LED patterns, brightness, and display images
 - **📁 File Management** - Upload, download, delete, and list files on device storage
 - **💾 Storage Operations** - Monitor storage usage and format device storage
 - **🔧 Firmware Updates** - Upload and install firmware updates with progress tracking
@@ -176,6 +176,51 @@ update_weather_display()
 - **[Homebrew Tap](https://github.com/busy-tag/homebrew-busytag)** - macOS installation
 - **[Issues & Support](https://github.com/busy-tag/busytag-cli/issues)** - Bug reports and feature requests
 - **[Releases](https://github.com/busy-tag/busytag-cli/releases)** - Download binary releases
+
+## 📈 Version History
+
+### v0.5.0 (Latest)
+- Updated library versions
+- Enhanced device communication stability
+- Improved error handling
+
+### v0.4.1
+- Project cleanup and code optimization
+- Minor bug fixes
+
+### v0.4.0
+- Updated library versions
+- Performance improvements
+- Better compatibility across platforms
+
+### v0.3.6
+- General version update
+- Stability improvements
+
+### v0.3.5
+- Fixed Homebrew formula path
+- Enhanced macOS installation process
+
+### v0.3.4 & v0.3.3
+- Minor updates and fixes
+- Code refinements
+
+### v0.3.2 & v0.3.1
+- Project file reorganization
+- Debug improvements
+
+### v0.3.0
+- Added Homebrew automation
+- Improved deployment process
+
+### v0.2.0
+- Major README.md improvements
+- Enhanced documentation
+
+### v0.1.0
+- Initial public release
+- Core CLI functionality
+- Device discovery and basic operations
 
 ## 📄 License
 
