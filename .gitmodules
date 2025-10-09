@@ -1,0 +1,3 @@
+[submodule "busytag-lib"]
+	path = busytag-lib
+	url = https://github.com/busy-tag/busytag-lib.git
