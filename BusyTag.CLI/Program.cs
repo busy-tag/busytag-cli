@@ -118,6 +118,11 @@ class Program
                 await HandleRestartCommand(args);
                 break;
 
+            case "recover":
+            case "rescue":
+                await HandleRecoverCommand(args);
+                break;
+
             case "version":
             case "--version":
             case "-v":
@@ -1308,6 +1313,9 @@ class Program
                     case "16":
                         DisconnectDevice();
                         break;
+                    case "17":
+                        await HandleRecoverCommand(Array.Empty<string>());
+                        break;
                     case "0":
                     case "q":
                     case "quit":
@@ -1363,6 +1371,7 @@ class Program
         Console.WriteLine("14. Format disk (DANGER!)");
         Console.WriteLine("15. Restart device");
         Console.WriteLine("16. Disconnect");
+        Console.WriteLine("17. Recover boot-mode device");
         Console.WriteLine("0. Exit");
         Console.WriteLine();
         Console.Write("Enter your choice: ");
@@ -1406,6 +1415,15 @@ class Program
         Console.WriteLine("  firmware <port> <file.bin>");
         Console.WriteLine("                          - Upload firmware to device");
         Console.WriteLine();
+        Console.WriteLine("Recovery:");
+        Console.WriteLine("  recover [port]          - Erase + flash firmware (full recovery)");
+        Console.WriteLine("  recover [port] --no-erase");
+        Console.WriteLine("                          - Flash without erasing first");
+        Console.WriteLine("  recover [port] --firmware-dir <path>");
+        Console.WriteLine("                          - Use custom firmware binaries");
+        Console.WriteLine("  recover [port] --esptool <path>");
+        Console.WriteLine("                          - Specify esptool executable path");
+        Console.WriteLine();
         Console.WriteLine("Other:");
         Console.WriteLine("  version, -v, --version  - Show version information");
         Console.WriteLine("  help, -h, --help        - Show this help message");
@@ -1446,17 +1464,33 @@ class Program
         }
 
         var devices = await _manager.FindBusyTagDevice();
+        var detailed = _manager.GetLastDetailedDevices();
 
-        if (devices == null || devices.Count == 0)
+        var normalDevices = detailed.Where(d => d.Mode == BusyTag.Lib.Util.BusyTagDeviceMode.Normal).ToList();
+        var bootDevices = detailed.Where(d => d.Mode == BusyTag.Lib.Util.BusyTagDeviceMode.BootLoader).ToList();
+
+        if (normalDevices.Count == 0 && bootDevices.Count == 0)
         {
             Console.WriteLine("No BusyTag devices found.");
         }
         else
         {
-            Console.WriteLine($"Found {devices.Count} device(s):");
-            for (int i = 0; i < devices.Count; i++)
+            if (normalDevices.Count > 0)
             {
-                Console.WriteLine($"  {i + 1}. {devices[i]}");
+                Console.WriteLine($"Found {normalDevices.Count} device(s):");
+                for (int i = 0; i < normalDevices.Count; i++)
+                {
+                    Console.WriteLine($"  {i + 1}. {normalDevices[i].PortName}");
+                }
+            }
+
+            if (bootDevices.Count > 0)
+            {
+                Console.WriteLine($"Found {bootDevices.Count} device(s) in BOOT/RECOVERY mode:");
+                foreach (var dev in bootDevices)
+                {
+                    Console.WriteLine($"  - {dev.PortName} (Boot Mode) -- Use 'busytag-cli recover {dev.PortName}' to flash firmware");
+                }
             }
         }
     }
@@ -2374,4 +2408,234 @@ class Program
     {
         Console.WriteLine($"\nDevice disconnected: {portName}");
     }
+
+    #region Recovery / Firmware Flashing
+
+    private static async Task HandleRecoverCommand(string[] args)
+    {
+        Console.WriteLine();
+        Console.WriteLine("[RECOVERY] ESP32-S3 Boot Mode Device Recovery");
+        Console.WriteLine("=============================================");
+
+        // Parse arguments
+        string? port = null;
+        string? firmwareDir = null;
+        string? esptoolPath = null;
+        bool eraseFirst = true; // Default to erase-first for bricked devices
+        bool noErase = false;
+
+        for (int i = 1; i < args.Length; i++)
+        {
+            switch (args[i].ToLower())
+            {
+                case "--firmware-dir" when i + 1 < args.Length:
+                    firmwareDir = args[++i];
+                    break;
+                case "--esptool" when i + 1 < args.Length:
+                    esptoolPath = args[++i];
+                    break;
+                case "--no-erase":
+                    noErase = true;
+                    eraseFirst = false;
+                    break;
+                default:
+                    if (!args[i].StartsWith("--") && port == null)
+                        port = args[i];
+                    break;
+            }
+        }
+
+        // Auto-detect boot-mode devices if no port specified
+        if (port == null)
+        {
+            Console.WriteLine("Scanning for boot-mode devices...");
+            _manager ??= new BusyTagManager();
+            _manager.EnableVerboseLogging = true;
+
+            // Stop periodic search and force-reset scan flag to avoid race condition
+            _manager.StopPeriodicDeviceSearch();
+            await Task.Delay(500);
+            _manager.ResetScanState();
+
+            var result = await _manager.FindBusyTagDevice();
+            var detailed = _manager.GetLastDetailedDevices();
+
+            // Restart periodic search for interactive mode
+            if (_isRunning)
+                _manager.StartPeriodicDeviceSearch(3000);
+
+            _manager.EnableVerboseLogging = false;
+
+            var bootDevices = detailed
+                .Where(d => d.Mode == BusyTag.Lib.Util.BusyTagDeviceMode.BootLoader)
+                .ToList();
+
+            if (bootDevices.Count == 0)
+            {
+                Console.WriteLine("No boot-mode devices found.");
+                Console.WriteLine();
+                Console.WriteLine("To put the device into boot mode:");
+                Console.WriteLine("  1. Disconnect USB");
+                Console.WriteLine("  2. Hold the BOOT button on the device");
+                Console.WriteLine("  3. Connect USB while holding BOOT");
+                Console.WriteLine("  4. Release BOOT after connecting");
+                Console.WriteLine();
+                Console.WriteLine("Or specify a port directly: busytag-cli recover COM5");
+                return;
+            }
+
+            if (bootDevices.Count == 1)
+            {
+                port = bootDevices[0].PortName;
+                Console.WriteLine($"Found boot-mode device: {port}");
+            }
+            else
+            {
+                Console.WriteLine($"Found {bootDevices.Count} boot-mode devices:");
+                for (int i = 0; i < bootDevices.Count; i++)
+                    Console.WriteLine($"  {i + 1}. {bootDevices[i].PortName}");
+                Console.Write("Select device (number): ");
+                if (int.TryParse(Console.ReadLine(), out int choice) && choice > 0 && choice <= bootDevices.Count)
+                    port = bootDevices[choice - 1].PortName;
+                else
+                {
+                    Console.WriteLine("Invalid selection.");
+                    return;
+                }
+            }
+        }
+
+        // Find esptool
+        Console.Write("Looking for esptool... ");
+        string? foundEsptool = esptoolPath ?? EspToolRunner.FindEsptool();
+        if (foundEsptool == null)
+        {
+            Console.WriteLine("NOT FOUND");
+            Console.WriteLine();
+            Console.WriteLine("esptool is required for firmware recovery. Options:");
+            Console.WriteLine("  1. Install ESP-IDF: https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/get-started/");
+            Console.WriteLine("  2. Install esptool: pip install esptool");
+            Console.WriteLine("  3. Download standalone: https://github.com/espressif/esptool/releases");
+            Console.WriteLine("  4. Specify path: busytag-cli recover COM5 --esptool \"C:\\path\\to\\esptool.exe\"");
+            return;
+        }
+        Console.WriteLine($"OK ({foundEsptool})");
+
+        // Create firmware package
+        FirmwarePackage firmware;
+        if (firmwareDir != null)
+        {
+            Console.WriteLine($"Using firmware from: {firmwareDir}");
+            firmware = FirmwarePackage.FromDirectory(firmwareDir);
+        }
+        else
+        {
+            Console.WriteLine("Using embedded firmware (built-in recovery image)");
+            try
+            {
+                firmware = FirmwarePackage.FromEmbeddedResources();
+            }
+            catch (InvalidOperationException ex)
+            {
+                Console.WriteLine($"ERROR: {ex.Message}");
+                Console.WriteLine("Use --firmware-dir to specify firmware directory.");
+                return;
+            }
+        }
+
+        using (firmware)
+        {
+            // Validate firmware
+            if (!firmware.Validate(out string? error))
+            {
+                Console.WriteLine($"ERROR: {error}");
+                return;
+            }
+
+            // Show summary
+            Console.WriteLine();
+            Console.WriteLine($"Device:    {port} (Boot Mode)");
+            Console.WriteLine("Firmware to flash:");
+            Console.WriteLine(firmware.GetSummary());
+            Console.WriteLine();
+
+            if (eraseFirst)
+                Console.WriteLine("Flash will be fully erased before writing (recommended for recovery).");
+            else
+                Console.WriteLine("Skipping erase (use without --no-erase for full recovery).");
+
+            Console.Write("Proceed with firmware flash? (y/N): ");
+            var confirm = Console.ReadLine()?.Trim().ToLower();
+            if (confirm != "y" && confirm != "yes")
+            {
+                Console.WriteLine("Cancelled.");
+                return;
+            }
+
+            // Create runner
+            EspToolRunner runner;
+            try
+            {
+                runner = new EspToolRunner(foundEsptool);
+            }
+            catch (FileNotFoundException ex)
+            {
+                Console.WriteLine($"ERROR: {ex.Message}");
+                return;
+            }
+
+            runner.OutputReceived += (_, msg) =>
+            {
+                if (msg.StartsWith("ERROR"))
+                    Console.WriteLine($"  {msg}");
+            };
+
+            // Erase flash if requested
+            if (eraseFirst)
+            {
+                Console.WriteLine();
+                Console.Write("Erasing flash... ");
+                var eraseOk = await runner.EraseFlashAsync(port);
+                Console.WriteLine(eraseOk ? "OK" : "FAILED");
+                if (!eraseOk)
+                {
+                    Console.WriteLine("Flash erase failed. Check the device connection.");
+                    return;
+                }
+            }
+
+            // Flash firmware
+            Console.WriteLine();
+            Console.WriteLine("Flashing firmware...");
+
+            var lastPercent = -1;
+            var progress = new Progress<FlashProgressInfo>(info =>
+            {
+                if (info.Percent != lastPercent && info.Percent % 5 == 0)
+                {
+                    Console.Write($"\r  Progress: {info.Percent}%   ");
+                    lastPercent = info.Percent;
+                }
+            });
+
+            var success = await runner.FlashFirmwareAsync(port, firmware, progress);
+
+            Console.WriteLine();
+            if (success)
+            {
+                Console.WriteLine();
+                Console.WriteLine("Firmware flashed successfully!");
+                Console.WriteLine("Please disconnect and reconnect the USB cable to restart the device.");
+                Console.WriteLine("Then run 'busytag-cli scan' to verify the device is back online.");
+            }
+            else
+            {
+                Console.WriteLine();
+                Console.WriteLine("Firmware flash FAILED.");
+                Console.WriteLine("Check the connection and try again. Make sure no other program is using the COM port.");
+            }
+        }
+    }
+
+    #endregion
 }

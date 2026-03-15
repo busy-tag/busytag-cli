@@ -11,11 +11,11 @@
         <!-- Package Information -->
         <PackageId>BusyTag.CLI</PackageId>
         <Version>0.5.1</Version>
-        <Authors>BUSY TAG SIA</Authors>
-        <Company>BUSY TAG SIA</Company>
+        <Authors>SIA BUSY TAG</Authors>
+        <Company>SIA BUSY TAG</Company>
         <Product>BusyTag CLI</Product>
         <Description>Command-line interface for BusyTag device management. Control your BusyTag displays, upload files, manage storage, update firmware, and more.</Description>
-        <Copyright>Copyright © 2025 BUSY TAG SIA</Copyright>
+        <Copyright>Copyright © 2025-2026 SIA BUSY TAG</Copyright>
         
         <!-- URLs and Metadata -->
         <PackageProjectUrl>https://github.com/busy-tag/busytag-cli</PackageProjectUrl>
@@ -43,6 +43,25 @@
     <ItemGroup>
         <None Include="README.md" Pack="true" PackagePath="\" />
         <None Include="icon.png" Pack="true" PackagePath="\" Condition="Exists('icon.png')" />
+    </ItemGroup>
+
+    <!-- Bundled esptool standalone executables for firmware recovery (all platforms) -->
+    <ItemGroup>
+        <Content Include="Tools\win\esptool.exe" CopyToOutputDirectory="PreserveNewest" />
+        <Content Include="Tools\macos\esptool" CopyToOutputDirectory="PreserveNewest" />
+        <Content Include="Tools\linux\esptool" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
+    <!-- Embedded firmware binaries for ESP32-S3 recovery -->
+    <ItemGroup>
+        <EmbeddedResource Include="Firmware\bootloader.bin" LogicalName="BusyTag.CLI.Firmware.bootloader.bin" />
+        <EmbeddedResource Include="Firmware\partition-table.bin" LogicalName="BusyTag.CLI.Firmware.partition-table.bin" />
+        <EmbeddedResource Include="Firmware\file_server.bin" LogicalName="BusyTag.CLI.Firmware.file_server.bin" />
+        <EmbeddedResource Include="Firmware\ota_data_initial.bin" LogicalName="BusyTag.CLI.Firmware.ota_data_initial.bin" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="System.Management" Version="9.0.14" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
     </ItemGroup>
 
     <ItemGroup>
