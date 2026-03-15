@@ -520,6 +520,7 @@ class Program
                 patternNumber <= patternList.Count)
             {
                 var pattern = patternList[patternNumber - 1];
+                if (pattern == null) return;
                 var success = await device.SetNewCustomPattern(pattern.PatternLines, true, false);
                 if (success && count != 1)
                 {
@@ -1909,7 +1910,8 @@ class Program
                     {
                         try
                         {
-                            var scanSuccess = await _currentDevice?.ActivateFileStorageScanAsync();
+                            if (_currentDevice == null) return;
+                            var scanSuccess = await _currentDevice.ActivateFileStorageScanAsync();
                             if (scanSuccess)
                             {
                                 Console.WriteLine("[OK] Device storage scan activated successfully!");
@@ -2422,7 +2424,6 @@ class Program
         string? firmwareDir = null;
         string? esptoolPath = null;
         var eraseFirst = true; // Default to erase-first for bricked devices
-        var noErase = false;
 
         for (int i = 1; i < args.Length; i++)
         {
@@ -2435,7 +2436,6 @@ class Program
                     esptoolPath = args[++i];
                     break;
                 case "--no-erase":
-                    noErase = true;
                     eraseFirst = false;
                     break;
                 default:
