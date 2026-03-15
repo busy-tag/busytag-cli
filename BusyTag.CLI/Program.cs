@@ -2421,8 +2421,8 @@ class Program
         string? port = null;
         string? firmwareDir = null;
         string? esptoolPath = null;
-        bool eraseFirst = true; // Default to erase-first for bricked devices
-        bool noErase = false;
+        var eraseFirst = true; // Default to erase-first for bricked devices
+        var noErase = false;
 
         for (int i = 1; i < args.Length; i++)
         {
@@ -2521,7 +2521,7 @@ class Program
         }
         Console.WriteLine($"OK ({foundEsptool})");
 
-        // Create firmware package
+        // Create a firmware package
         FirmwarePackage firmware;
         if (firmwareDir != null)
         {
@@ -2621,16 +2621,15 @@ class Program
             var success = await runner.FlashFirmwareAsync(port, firmware, progress);
 
             Console.WriteLine();
+            Console.WriteLine();
             if (success)
             {
-                Console.WriteLine();
                 Console.WriteLine("Firmware flashed successfully!");
                 Console.WriteLine("Please disconnect and reconnect the USB cable to restart the device.");
                 Console.WriteLine("Then run 'busytag-cli scan' to verify the device is back online.");
             }
             else
             {
-                Console.WriteLine();
                 Console.WriteLine("Firmware flash FAILED.");
                 Console.WriteLine("Check the connection and try again. Make sure no other program is using the COM port.");
             }
