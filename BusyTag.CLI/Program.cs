@@ -110,10 +110,6 @@ class Program
                 await HandleStorageCommand(args);
                 break;
 
-            case "firmware":
-                await HandleFirmwareCommand(args);
-                break;
-
             case "format":
                 await HandleFormatCommand(args);
                 break;
@@ -629,57 +625,6 @@ class Program
         }
     }
 
-    private static async Task HandleFirmwareCommand(string[] args)
-    {
-        if (args.Length < 3)
-        {
-            Console.WriteLine("Usage: busytag-cli firmware <port> <firmware_file.bin>");
-            Console.WriteLine("Example: busytag-cli firmware COM3 \"firmware_v2.1.bin\"");
-            return;
-        }
-
-        string port = args[1];
-        string firmwarePath = string.Join(" ", args.Skip(2)).Trim('"', '\'');
-
-        if (!File.Exists(firmwarePath))
-        {
-            Console.WriteLine($"Firmware file not found: {firmwarePath}");
-            return;
-        }
-
-        if (!firmwarePath.EndsWith(".bin", StringComparison.OrdinalIgnoreCase))
-        {
-            Console.WriteLine("Only .bin files are supported for firmware updates");
-            return;
-        }
-
-        var device = new BusyTagDevice(port);
-        try
-        {
-            await device.Connect();
-            if (!device.IsConnected)
-            {
-                Console.WriteLine($"Failed to connect to {port}");
-                return;
-            }
-
-            Console.WriteLine($"WARNING: Firmware update can brick your device!");
-            Console.WriteLine($"Uploading firmware: {Path.GetFileName(firmwarePath)}");
-
-            await device.SendNewFile(firmwarePath);
-            await device.ActivateFileStorageScanAsync();
-
-            Console.WriteLine("Firmware upload completed. Device will process the update.");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Firmware update failed: {ex.Message}");
-        }
-        finally
-        {
-            device.Disconnect();
-        }
-    }
 
     private static async Task HandleFormatCommand(string[] args)
     {
@@ -846,171 +791,6 @@ class Program
     {
         var imageExtensions = new[] { ".png", ".gif" };
         return imageExtensions.Any(ext => fileName.EndsWith(ext, StringComparison.OrdinalIgnoreCase));
-    }
-
-    private static async Task UploadFirmware()
-    {
-        if (_currentDevice?.IsConnected != true)
-        {
-            Console.WriteLine("No device connected.");
-            return;
-        }
-
-        Console.WriteLine("[FIRMWARE] Firmware Upload");
-        Console.WriteLine("==================");
-        Console.WriteLine("[WARNING] Firmware updates can potentially brick your device!");
-        Console.WriteLine("   - Only upload firmware files specifically designed for your device");
-        Console.WriteLine("   - Ensure stable power supply during update");
-        Console.WriteLine("   - Do not disconnect device during firmware update");
-        Console.WriteLine();
-
-        Console.Write("Enter firmware file path (.bin file): ");
-        var input = Console.ReadLine()?.Trim();
-
-        if (string.IsNullOrEmpty(input))
-        {
-            Console.WriteLine("No file path provided.");
-            return;
-        }
-
-        // Handle paths with quotes
-        var filePath = input;
-        if ((filePath.StartsWith("\"") && filePath.EndsWith("\"")) ||
-            (filePath.StartsWith("'") && filePath.EndsWith("'")))
-        {
-            filePath = filePath.Substring(1, filePath.Length - 2);
-        }
-
-        if (!File.Exists(filePath))
-        {
-            Console.WriteLine($"File not found: {filePath}");
-            return;
-        }
-
-        var fileInfo = new FileInfo(filePath);
-        var fileName = fileInfo.Name;
-
-        // Verify it's a .bin file
-        if (!fileName.EndsWith(".bin", StringComparison.OrdinalIgnoreCase))
-        {
-            Console.WriteLine("[ERROR] Only .bin files are supported for firmware updates.");
-            return;
-        }
-
-        // Show firmware file information
-        Console.WriteLine($"\nFirmware File Information:");
-        Console.WriteLine($"  Name: {fileName}");
-        Console.WriteLine($"  Size: {fileInfo.Length:N0} bytes ({GetHumanReadableSize(fileInfo.Length)})");
-        Console.WriteLine($"  Path: {filePath}");
-        Console.WriteLine($"  Current device firmware: {_currentDevice.FirmwareVersion}");
-
-        // Final confirmation
-        Console.WriteLine("\n[WARNING] FIRMWARE UPDATE CONFIRMATION");
-        Console.Write("Are you sure you want to proceed with firmware update? (y/N): ");
-        var confirmation = Console.ReadLine()?.Trim().ToLower();
-
-        if (confirmation != "y" && confirmation != "yes")
-        {
-            Console.WriteLine("Firmware update cancelled.");
-            return;
-        }
-
-        Console.WriteLine("\n[INFO] Starting firmware upload...");
-        Console.WriteLine("[INFO] Firmware update progress will be shown below when device begins processing");
-        Console.WriteLine("[WARNING] DO NOT DISCONNECT THE DEVICE DURING UPDATE!\n");
-
-        // Setup progress tracking for upload
-        var uploadStartTime = DateTime.Now;
-        var lastProgressTime = DateTime.Now;
-        var lastProgressBytes = 0L;
-        var fileSize = fileInfo.Length;
-
-        void OnProgress(object? sender, UploadProgressArgs args)
-        {
-            var now = DateTime.Now;
-            var currentBytes = (long)(fileSize * args.ProgressLevel / 100.0);
-            var elapsed = now - uploadStartTime;
-            var sinceLastUpdate = now - lastProgressTime;
-
-            var overallSpeed = elapsed.TotalSeconds > 0 ? currentBytes / elapsed.TotalSeconds : 0;
-            var recentSpeed = sinceLastUpdate.TotalSeconds > 0.1
-                ? (currentBytes - lastProgressBytes) / sinceLastUpdate.TotalSeconds
-                : overallSpeed;
-
-            var remainingBytes = fileSize - currentBytes;
-            var eta = recentSpeed > 0 && remainingBytes > 0
-                ? TimeSpan.FromSeconds(remainingBytes / recentSpeed)
-                : TimeSpan.Zero;
-
-            // Ensure ETA is not negative or infinity
-            if (eta.TotalSeconds < 0 || double.IsInfinity(eta.TotalSeconds) || double.IsNaN(eta.TotalSeconds))
-            {
-                eta = TimeSpan.Zero;
-            }
-
-            var progressBar = CreateProgressBar(args.ProgressLevel, 30);
-            Console.Write($"\r[UPLOAD] Upload: {progressBar} {args.ProgressLevel:F1}% | " +
-                          $"{GetHumanReadableSize(currentBytes)}/{GetHumanReadableSize(fileSize)} | " +
-                          $"Speed: {GetHumanReadableSize((long)recentSpeed)}/s | " +
-                          $"ETA: {FormatTimeSpan(eta)}");
-
-            lastProgressTime = now;
-            lastProgressBytes = currentBytes;
-        }
-
-        void OnFinished(object? sender, FileUploadFinishedArgs fileUploadFinishedArgs)
-        {
-            var totalTime = DateTime.Now - uploadStartTime;
-            Console.WriteLine(); // New line after progress bar
-
-            if (fileUploadFinishedArgs.Success)
-            {
-                var avgSpeed = totalTime.TotalSeconds > 0 ? fileSize / totalTime.TotalSeconds : 0;
-                Console.WriteLine("[OK] Firmware file uploaded successfully!");
-                Console.WriteLine($"   Upload time: {FormatTimeSpanWithMs(totalTime)}");
-                Console.WriteLine($"   Average speed: {GetHumanReadableSize((long)avgSpeed)}/s");
-                Console.WriteLine("\n[INFO] Activating firmware update process...");
-                Console.WriteLine("[INFO] Device will now process the firmware - monitor progress below:");
-
-                Task.Run(async () =>
-                {
-                    try
-                    {
-                        if (_currentDevice != null) await _currentDevice.ActivateFileStorageScanAsync();
-                        Console.WriteLine("[OK] Firmware processing activated");
-                        Console.WriteLine("[INFO] Waiting for device to begin firmware update...");
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"[ERROR] Error activating firmware processing: {ex.Message}");
-                    }
-                });
-            }
-            else
-            {
-                Console.WriteLine("[ERROR] Firmware upload failed!");
-                Console.WriteLine($"   Upload time: {FormatTimeSpanWithMs(totalTime)}");
-                Console.WriteLine("   Device firmware was not updated");
-            }
-        }
-
-        _currentDevice.FileUploadProgress += OnProgress;
-        _currentDevice.FileUploadFinished += OnFinished;
-
-        try
-        {
-            await _currentDevice.SendNewFile(filePath);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"\n[ERROR] Firmware upload error: {ex.Message}");
-        }
-        finally
-        {
-            // Cleanup event handlers
-            _currentDevice.FileUploadProgress -= OnProgress;
-            _currentDevice.FileUploadFinished -= OnFinished;
-        }
     }
 
     private static async Task FormatDisk()
@@ -1308,18 +1088,15 @@ class Program
                         await ScanDeviceStorage();
                         break;
                     case "13":
-                        await UploadFirmware();
-                        break;
-                    case "14":
                         await FormatDisk();
                         break;
-                    case "15":
+                    case "14":
                         await RestartDevice();
                         break;
-                    case "16":
+                    case "15":
                         DisconnectDevice();
                         break;
-                    case "17":
+                    case "16":
                         await HandleRecoverCommand(Array.Empty<string>());
                         break;
                     case "0":
@@ -1373,11 +1150,10 @@ class Program
         Console.WriteLine("10. Download file");
         Console.WriteLine("11. Delete file");
         Console.WriteLine("12. Scan device storage");
-        Console.WriteLine("13. Upload firmware (.bin)");
-        Console.WriteLine("14. Format disk (DANGER!)");
-        Console.WriteLine("15. Restart device");
-        Console.WriteLine("16. Disconnect");
-        Console.WriteLine("17. Recover boot-mode device");
+        Console.WriteLine("13. Format disk (DANGER!)");
+        Console.WriteLine("14. Restart device");
+        Console.WriteLine("15. Disconnect");
+        Console.WriteLine("16. Recover boot-mode device");
         Console.WriteLine("0. Exit");
         Console.WriteLine();
         Console.Write("Enter your choice: ");
@@ -1417,10 +1193,6 @@ class Program
         Console.WriteLine("  storage <port>          - Show storage information");
         Console.WriteLine("  format <port> --force   - Format device storage (DANGER!)");
         Console.WriteLine();
-        Console.WriteLine("Firmware:");
-        Console.WriteLine("  firmware <port> <file.bin>");
-        Console.WriteLine("                          - Upload firmware to device");
-        Console.WriteLine();
         Console.WriteLine("Recovery:");
         Console.WriteLine("  recover [port]          - Erase + flash firmware (full recovery)");
         Console.WriteLine("  recover [port] --no-erase");
@@ -1454,7 +1226,6 @@ class Program
         Console.WriteLine("  busytag-cli show COM3 photo.png");
         Console.WriteLine("  busytag-cli storage COM3");
         Console.WriteLine("  busytag-cli delete COM3 old_image.png");
-        Console.WriteLine("  busytag-cli firmware COM3 \"firmware_v2.1.bin\"");
         Console.WriteLine("  busytag-cli format COM3 --force");
         Console.WriteLine();
         Console.WriteLine("Run without arguments for interactive mode.");
