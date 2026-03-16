@@ -10,11 +10,11 @@
 
         <!-- Package Information -->
         <PackageId>BusyTag.CLI</PackageId>
-        <Version>0.5.1</Version>
+        <Version>0.6.0</Version>
         <Authors>SIA BUSY TAG</Authors>
         <Company>SIA BUSY TAG</Company>
         <Product>BusyTag CLI</Product>
-        <Description>Command-line interface for BusyTag device management. Control your BusyTag displays, upload files, manage storage, update firmware, and more.</Description>
+        <Description>Command-line interface for BusyTag device management. Control your BusyTag displays, upload files, manage storage, recover firmware, and more.</Description>
         <Copyright>Copyright © 2025-2026 SIA BUSY TAG</Copyright>
         
         <!-- URLs and Metadata -->
@@ -30,7 +30,7 @@
         <PackageTags>busytag;cli;device-management;serial;hardware;iot</PackageTags>
 
         <!-- Release notes (will be updated by automation) -->
-        <PackageReleaseNotes>Version 0.5.1: Enhanced LED pattern control - Added pattern count parameter (1-254 times, 255 infinite), pattern selection by number, improved pattern command syntax, and comprehensive pattern documentation with all 24 available patterns.</PackageReleaseNotes>
+        <PackageReleaseNotes>Version 0.6.0: ESP32-S3 firmware recovery (recover/rescue commands), bootloader mode device detection, Linux support enabled, removed legacy firmware command, null safety improvements, updated BusyTag.Lib to v0.6.0.</PackageReleaseNotes>
     </PropertyGroup>
 
     <!-- .NET Tool Configuration -->
@@ -50,12 +50,12 @@
         <PackageReference Include="System.Management" Version="9.0.14" />
     </ItemGroup>
 
-    <ItemGroup>
-        <ProjectReference Include="..\busytag-lib\BusyTag.Lib.csproj" />
-    </ItemGroup>
-
 <!--    <ItemGroup>-->
-<!--      <PackageReference Include="BusyTag.Lib" Version="0.5.4" />-->
+<!--        <ProjectReference Include="..\busytag-lib\BusyTag.Lib.csproj" />-->
 <!--    </ItemGroup>-->
+
+    <ItemGroup>
+      <PackageReference Include="BusyTag.Lib" Version="0.6.0" />
+    </ItemGroup>
 
 </Project>
