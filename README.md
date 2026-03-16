@@ -33,7 +33,10 @@ brew install busytag-cli
 
 ### Cross-Platform (.NET)
 ```bash
-# Requires .NET 8.0+ runtime
+# Recommended: one-line installer (installs and configures PATH)
+curl -sSL https://raw.githubusercontent.com/busy-tag/busytag-cli/main/install.sh | bash
+
+# Or install manually (requires .NET 8.0+ runtime)
 dotnet tool install -g BusyTag.CLI
 ```
 
