@@ -6,6 +6,7 @@
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)](https://github.com/dotnet/core)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Downloads](https://img.shields.io/nuget/dt/BusyTag.CLI?color=green)](https://www.nuget.org/packages/BusyTag.CLI)
+[![Publish to NuGet](https://github.com/busy-tag/busytag-cli/actions/workflows/publish-nuget.yml/badge.svg)](https://github.com/busy-tag/busytag-cli/actions/workflows/publish-nuget.yml)
 
 A comprehensive command-line interface for managing BusyTag devices. Control your BusyTag displays, upload files, manage storage, update firmware, and more - all from the command line or through an interactive interface.
 
@@ -240,13 +241,18 @@ Monitor-BuildStatus
 
 ## 📈 Version History
 
-### v0.5.2 (Latest - Unreleased)
+### v0.6.1 (Latest)
+- **📦 Library Update**: Updated BusyTag.Lib to v0.6.1 with esptool NuGet packaging fix
+- **🔧 Esptool Deployment**: Ensures esptool binaries are properly deployed when consumed as a NuGet package
+
+### v0.6.0
 - **🔧 ESP32-S3 Firmware Recovery**: New `recover`/`rescue` commands for flashing firmware to boot-mode devices using built-in esptool
 - **🔍 Bootloader Detection**: `scan` command now detects and reports devices in boot/recovery mode separately
 - **🐧 Linux Support Enabled**: Linux device discovery enabled by default via `EnableExperimentalLinuxSupport`
 - **🗑️ Removed Firmware Upload**: Replaced the old `firmware` command with the more robust `recover` workflow
 - **🛡️ Null Safety Improvements**: Better null checks throughout the codebase
 - **📖 Updated Help Text**: Recovery command documentation with `--no-erase`, `--firmware-dir`, and `--esptool` options
+- **📡 Busy Tag 2.0 Support**: Updated communication for Busy Tag 2.0 devices
 
 ### v0.5.1
 - **🎨 Enhanced LED Pattern Control**: Added count parameter for pattern repetition (1-254 times, 255 for infinite)
