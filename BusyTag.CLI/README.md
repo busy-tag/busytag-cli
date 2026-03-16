@@ -216,18 +216,28 @@ busytag-cli space <port>                      # Alias for storage
 busytag-cli format <port> --force             # Format device storage (DESTRUCTIVE!)
 ```
 
-### Firmware Management
+### Recovery Commands
 
-#### Firmware Upload
+#### ESP32-S3 Firmware Recovery
 ```bash
-busytag-cli firmware <port> <firmware.bin>    # Upload firmware update
+busytag-cli recover [port]                    # Auto-detect boot-mode device and flash firmware
+busytag-cli rescue [port]                     # Alias for recover
+busytag-cli recover [port] --no-erase         # Flash without erasing first
+busytag-cli recover [port] --firmware-dir <path>  # Use custom firmware binaries
+busytag-cli recover [port] --esptool <path>   # Specify esptool executable path
 ```
 
+**How to enter boot mode:**
+1. Disconnect USB
+2. Hold the BOOT button on the device
+3. Connect USB while holding BOOT
+4. Release BOOT after connecting
+
 **⚠️ Important Notes:**
-- Only use firmware files specifically designed for your device
-- Ensure a stable power supply during update
-- Do not disconnect device during firmware update
-- Keep backup firmware files for recovery
+- Default behavior erases flash before writing (recommended for bricked devices)
+- Uses bundled esptool and embedded firmware if no custom paths specified
+- If no port is specified, auto-detects boot-mode devices
+- Requires esptool (bundled, or install via `pip install esptool`)
 
 ### Information Commands
 
@@ -257,6 +267,7 @@ busytag-cli
 - 📈 Detailed storage analysis and file management
 - 🎛️ Guided workflows for complex operations
 - 📋 Device health monitoring and diagnostics
+- 🔧 Boot-mode device recovery with firmware flashing
 
 ### Environment Configuration
 
@@ -349,10 +360,10 @@ Create a `appsettings.Development.json` file for development settings:
 
 The project uses the following key dependencies:
 
-- **BusyTag.Lib** (v0.2.3+) - Core device communication library
+- **BusyTag.Lib** (v0.5.4+) - Core device communication library (with cloud, WebSocket, and recovery support)
 - **.NET 8.0** - Runtime framework
-- **System.IO.Ports** - Serial port communication
-- **Microsoft.Extensions.Logging** - Logging framework
+- **System.IO.Ports** (v9.0.14) - Serial port communication
+- **System.Management** (v9.0.14) - WMI-based device detection (Windows)
 
 ### Error Codes Reference
 
@@ -415,7 +426,18 @@ This project is licensed under the MIT License. See the main repository LICENSE 
 
 ## 📈 Version History
 
-### v0.5.0 (Latest)
+### v0.5.2 (Latest - Unreleased)
+- ESP32-S3 firmware recovery with `recover`/`rescue` commands
+- Bootloader mode device detection in `scan`
+- Linux support enabled by default
+- Removed legacy `firmware` command in favor of recovery workflow
+- Null safety improvements
+
+### v0.5.1
+- Enhanced LED pattern control with count parameter
+- Pattern selection by number (1-24) or by name
+
+### v0.5.0
 - Updated library versions
 - Enhanced device communication stability
 - Improved error handling

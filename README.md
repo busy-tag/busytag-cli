@@ -16,7 +16,7 @@ A comprehensive command-line interface for managing BusyTag devices. Control you
 - **✨ Advanced Pattern Control** - 24 built-in patterns with customizable repeat counts (1-254, 255=infinite)
 - **📁 File Management** - Upload, download, delete, and list files on device storage
 - **💾 Storage Operations** - Monitor storage usage and format device storage
-- **🔧 Firmware Updates** - Upload and install firmware updates with progress tracking
+- **🔧 ESP32-S3 Recovery** - Detect boot-mode devices and flash firmware with built-in esptool integration
 - **⚡ Interactive & Command-Line Modes** - Use as needed for automation or manual operation
 - **📊 Real-time Monitoring** - Progress bars, status updates, and event tracking
 - **🌍 Cross-Platform** - Works on Windows, macOS, and Linux
@@ -86,6 +86,7 @@ busytag-cli
 | `upload <port> <file>` | Upload file to device | `busytag-cli upload COM3 image.png` |
 | `files <port>` | List device files | `busytag-cli files COM3` |
 | `storage <port>` | Show storage information | `busytag-cli storage COM3` |
+| `recover [port]` | Recover boot-mode device | `busytag-cli recover COM5` |
 | `help` | Show all commands | `busytag-cli help` |
 
 ## 🎨 Color Examples
@@ -184,6 +185,7 @@ def update_weather_display():
     subprocess.run(["busytag-cli", "color", "COM3", color])
 
 update_weather_display()
+```
 
 ### Build Status Monitor (PowerShell)
 ```powershell
@@ -238,12 +240,19 @@ Monitor-BuildStatus
 
 ## 📈 Version History
 
-### v0.5.1 (Latest)
+### v0.5.2 (Latest - Unreleased)
+- **🔧 ESP32-S3 Firmware Recovery**: New `recover`/`rescue` commands for flashing firmware to boot-mode devices using built-in esptool
+- **🔍 Bootloader Detection**: `scan` command now detects and reports devices in boot/recovery mode separately
+- **🐧 Linux Support Enabled**: Linux device discovery enabled by default via `EnableExperimentalLinuxSupport`
+- **🗑️ Removed Firmware Upload**: Replaced the old `firmware` command with the more robust `recover` workflow
+- **🛡️ Null Safety Improvements**: Better null checks throughout the codebase
+- **📖 Updated Help Text**: Recovery command documentation with `--no-erase`, `--firmware-dir`, and `--esptool` options
+
+### v0.5.1
 - **🎨 Enhanced LED Pattern Control**: Added count parameter for pattern repetition (1-254 times, 255 for infinite)
 - **🔢 Pattern Selection by Number**: Patterns can now be activated by number (1-24) or by name
 - **📋 Complete Pattern Documentation**: All 24 available patterns listed with numbers and names
 - **✨ Improved Pattern Syntax**: Better command-line pattern handling with proper quoting support
-- **📖 Enhanced Documentation**: Updated examples, automation scripts, and help text with real pattern names
 
 ### v0.5.0
 - Updated library versions
