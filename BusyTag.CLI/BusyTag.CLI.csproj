@@ -55,7 +55,7 @@
 <!--    </ItemGroup>-->
 
     <ItemGroup>
-      <PackageReference Include="BusyTag.Lib" Version="0.6.0" />
+      <PackageReference Include="BusyTag.Lib" Version="0.6.1" />
     </ItemGroup>
 
 </Project>
