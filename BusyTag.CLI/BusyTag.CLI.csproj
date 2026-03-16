@@ -30,7 +30,7 @@
         <PackageTags>busytag;cli;device-management;serial;hardware;iot</PackageTags>
 
         <!-- Release notes (will be updated by automation) -->
-        <PackageReleaseNotes>Version 0.6.0: ESP32-S3 firmware recovery (recover/rescue commands), bootloader mode device detection, Linux support enabled, removed legacy firmware command, null safety improvements, updated BusyTag.Lib to v0.6.0.</PackageReleaseNotes>
+        <PackageReleaseNotes>Version 0.6.0: ESP32-S3 firmware recovery (recover/rescue commands with --no-erase, --firmware-dir, --esptool options), bootloader mode device detection in scan, updated BusyTag.Lib to v0.6.1, null safety improvements, updated documentation, supports Busy Tag 2.0 communication.</PackageReleaseNotes>
     </PropertyGroup>
 
     <!-- .NET Tool Configuration -->
