@@ -12,6 +12,11 @@ class Program
     private static List<string>? _lastFoundDevices = null;
     private static DateTime _lastDeviceMessage = DateTime.MinValue;
 
+    private static BusyTagManager CreateManager()
+    {
+        return new BusyTagManager { EnableExperimentalLinuxSupport = true };
+    }
+
     private static async Task Main(string[] args)
     {
         Console.WriteLine("BusyTag Device Manager CLI");
@@ -1247,7 +1252,7 @@ class Program
 
     private static async Task RunInteractiveMode()
     {
-        _manager = new BusyTagManager();
+        _manager = CreateManager();
 
         // Set up event handlers
         _manager.FoundBusyTagSerialDevices += OnDevicesFound;
@@ -1461,7 +1466,7 @@ class Program
 
         if (_manager == null)
         {
-            _manager = new BusyTagManager();
+            _manager = CreateManager();
         }
 
         var devices = await _manager.FindBusyTagDevice();
@@ -1502,7 +1507,7 @@ class Program
         {
             if (_manager == null)
             {
-                _manager = new BusyTagManager();
+                _manager = CreateManager();
             }
 
             var devices = await _manager.FindBusyTagDevice();
@@ -2449,7 +2454,7 @@ class Program
         if (port == null)
         {
             Console.WriteLine("Scanning for boot-mode devices...");
-            _manager ??= new BusyTagManager();
+            _manager ??= CreateManager();
             _manager.EnableVerboseLogging = true;
 
             // Stop periodic search and force-reset scan flag to avoid race condition

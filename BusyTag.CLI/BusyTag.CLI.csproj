@@ -47,7 +47,7 @@
 
 
     <ItemGroup>
-        <PackageReference Include="System.Management" Version="9.0.14" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
+        <PackageReference Include="System.Management" Version="9.0.14" />
     </ItemGroup>
 
     <ItemGroup>
