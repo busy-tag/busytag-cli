@@ -2252,9 +2252,9 @@ class Program
                 Console.WriteLine();
                 Console.WriteLine("To put the device into boot mode:");
                 Console.WriteLine("  1. Disconnect USB");
-                Console.WriteLine("  2. Hold the BOOT button on the device");
-                Console.WriteLine("  3. Connect USB while holding BOOT");
-                Console.WriteLine("  4. Release BOOT after connecting");
+                Console.WriteLine("  2. Hold the BOOT/RESET button on the device");
+                Console.WriteLine("  3. Connect USB while holding BOOT/RESET");
+                Console.WriteLine("  4. Release BOOT/RESET after connecting");
                 Console.WriteLine();
                 Console.WriteLine("Or specify a port directly: busytag-cli recover COM5");
                 return;
