@@ -86,19 +86,19 @@ else
     # Make available in current session
     export PATH="$PATH:$DOTNET_TOOLS_DIR"
 
-    if [ "$PROFILE_UPDATED" = true ]; then
-        echo ""
-        echo "NOTE: Restart your terminal or run 'source ~/${CURRENT_SHELL}rc' to update PATH in other sessions."
-    fi
 fi
 
 echo ""
 
-# Verify installation
-if command -v "$COMMAND_NAME" &> /dev/null; then
+# Verify installation (within this script's process)
+if [ -x "$DOTNET_TOOLS_DIR/$COMMAND_NAME" ]; then
     echo "Installation successful!"
     echo ""
-    $COMMAND_NAME --version
+    "$DOTNET_TOOLS_DIR/$COMMAND_NAME" --version
+    echo ""
+    echo "To start using busytag-cli, either:"
+    echo "  1. Open a new terminal window, or"
+    echo "  2. Run: export PATH=\"\$PATH:$DOTNET_TOOLS_DIR\""
 else
     echo "Warning: Installation completed but '$COMMAND_NAME' was not found."
     echo "Try restarting your terminal, then run: $COMMAND_NAME --version"
