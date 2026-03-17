@@ -244,7 +244,12 @@ Monitor-BuildStatus
 
 ## 📈 Version History
 
-### v0.6.1 (Latest)
+### v0.6.2 (Latest)
+- **🚀 Native USB Speed**: Updated BusyTag.Lib to v0.6.2 — native macOS USB driver now properly bundled for fast bulk transfers in all install methods (Homebrew, dotnet tool, self-contained)
+- **📦 Install Script**: Added one-line installer (`install.sh`) that handles dotnet tool installation and PATH configuration
+- **🔧 Homebrew Fix**: Fixed formula to build CLI project directly and bundle esptool + native USB driver
+
+### v0.6.1
 - **📦 Library Update**: Updated BusyTag.Lib to v0.6.1 with esptool NuGet packaging fix
 - **🔧 Esptool Deployment**: Ensures esptool binaries are properly deployed when consumed as a NuGet package
 
